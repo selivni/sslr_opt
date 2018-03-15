@@ -1,0 +1,3 @@
+/home/mark/programming/diploma/build/CMakeFiles/rebuild_cache.dir
+/home/mark/programming/diploma/build/CMakeFiles/edit_cache.dir
+/home/mark/programming/diploma/build/CMakeFiles/sslr_opt.dir
