@@ -1,9 +1,12 @@
-
+#include "Graphics.h"
+#include "PointerGraphics.h"
 
 void Graphics::init(int windowWidth, int WindowHeight)
 {
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
+
+	GraphicalPointer = this;
 
 	int argc = 1;
 	char** argv = new char*[2];
@@ -19,12 +22,13 @@ void Graphics::init(int windowWidth, int WindowHeight)
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutCreateWindow(PROJECT_NAME);
 
-	glutDisplayFunc(/*FILLME*/);
-	glutIdleFunc();
-	glutKeyboardFunc();
-	glutSpecialFunc();
-	glutPassiveMotionFunc();
-	glutReshapeFunc();
+	glutDisplayFunc(openGLFunctions::display);
+	glutIdleFunc(openGLFunctions::idle);
+	glutKeyboardFunc(openGLFunctions::keyboard);
+	glutSpecialFunc(openGLFunctions::special);
+	glutPassiveMotionFunc(openGLFunctions::mouseMove);
+	glutReshapeFunc(openGLFunctions::reshape);
+	mouseCaptured_ = false;
 	glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
 	glGlearColor(0.0, 0.0, 0.3, 0);
 	std::cout << "success" << std::endl;
@@ -151,6 +155,65 @@ MeshInfo Graphics::loadMesh(int i, uint& length)
 	return result;
 }
 
+bool Grahpics::loadTexture(const char* path)
+{
+	
+}
+
+void Graphics::loadTextures()
+{
+	aiString path;
+	aiReturn error;
+	GLuint texture;
+	GLuint noTexture;
+	if (!loadTexture((std::string(MODEL_PATH) +
+		"/textures/sponza_no_tex.tga").data(), noTexture))
+			throw std::invalid_argument("Error: failed to load no_texture texture");
+	texturesCount_++;
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
+	{
+		if ((error = scene_->mMaterials[i]->GetTexture(
+			 aiTextureType_AMBIENT, 0, &path)) == aiReturn_SUCCESS)
+		{
+			char* data = path.data;
+			for (unsigned int j = 0; data[j] != '\0'; j++)
+				if (data[j] == '\\')
+					data[j] = '/';
+			if (!loadTexture((std::string(MODEL_PATH) +
+				"/" + path.C_Str()).data(), texture))
+				texture = noTexture;
+			else
+				texturesCount_++;
+		} else
+			texture = noTexture;
+		materials_[i].first[0] = texture;
+
+	}
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
+	{
+		if ((error = scene_->mMaterials[i]->GetTexture(
+			 aiTextureType_OPACITY, 0, &path)) == aiReturn_SUCCESS)
+		{
+			char* data = path.data;
+			for (unsigned int j = 0; data[j] != '\0'; j++)
+				if (data[j] == '\\')
+					data[j] = '/';
+			if (!loadTexture((std::string(MODEL_PATH) +
+				"/" + path.C_Str()).data(), texture))
+				texture = 0;
+			else
+				opacityTexCount_++;
+		} else
+			texture = 0;
+		materials_[i].first[1] = texture;
+	}
+	std::cout << "Loaded " << texturesCount_ << '/'
+			  << scene_->mNumMaterials << " possible textures" << std::endl;
+	if (opacityTexCount_ != 0)
+		std::cout << "Also loaded " << opacityTexCount_
+				  << " opacity textures" << std::endl;
+}
+
 void Graphics::createModel()
 {
 	compileShaders();
@@ -179,3 +242,115 @@ void Graphics::createModel()
 	checkInfo();
 	#endif
 }
+
+void openGLFunctions::display()
+{
+	GraphicalPointer->display();
+}
+
+void Graphics::display()
+{
+	glEnable(GL_DEPTH_TEST); CHECK_GL_ERRORS
+	//glEnable(GL_CULL_FACE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
+
+//	drawLights();
+	drawSponza();
+//	updateLights();
+
+	glutSwapBuffers(); CHECK_GL_ERRORS
+}
+
+void openGLFunctions::idle()
+{
+	GraphicalPointer->idle();
+}
+
+void Graphics::idle()
+{
+	glutPostRedisplay();
+}
+
+void openGLFunctions::keyboard(unsigned char key, int x, int y)
+{
+	GraphicalPointer->keyboard(key, x ,y);
+}
+
+void Graphics::keyboard(unsigned char key, int x, int y)
+{
+	if (key == 'q' || key == 27)
+		shutdown();
+	else if (key == 'w' || key == 'W')
+	{
+		camera_.goForward(25.0);
+//		std::cout << "VM::vec3(" << camera_.position.x << ", "
+//				  << camera_.position.y << ", "
+//				  << camera_.position.z << ")," << std::endl;
+//		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
+//				  << camera_.position.y << ' '
+//				  << camera_.position.z << std::endl;
+	}
+	else if (key == 's' || key == 'S')
+	{
+		camera_.goBack(25.0);
+//		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
+//				  << camera_.position.y << ' '
+//				  << camera_.position.z << std::endl;
+	}
+	else if (key == 'm' || key == 'M')
+		toggleMouse();
+}
+
+void openGLFunctions::special(int key, int x, int y)
+{
+	GraphicalPointer->special(key, x, y);
+}
+
+void Grahpics::special(int key, int x, int y)
+{
+	if (key == GLUT_KEY_RIGHT)
+		camera_.rotateY(0.02);
+	else if (key == GLUT_KEY_LEFT)
+		camera_.rotateY(-0.02);
+	else if (key == GLUT_KEY_UP)
+		camera_.rotateTop(-0.02);
+	else if (key == GLUT_KEY_DOWN)
+		camera_.rotateTop(0.02);
+}
+
+void openGLFunctions::mouseMove(int x, int y)
+{
+	GraphicalPointer->mouseMove(x, y);
+}
+
+void Graphics::mouseMove(int x, int y)
+{
+	if (mouseCaptured_)
+	{
+		int centerX = windowWidth_ / 2;
+		int centerY = windowHeight_ / 2;
+		if (x != centerX || y != centerY)
+		{
+			camera_.rotateY((x - centerX) / 1000.0f);
+			camera_.rotateTop((y - centerY) / 1000.0f);
+			glutWarpPointer(centerX, centerY);
+		}
+	}
+}
+
+void openGLFunctions::reshape(GLint newWidth, GLint newHeight)
+{
+	GraphicalPointer->reshape(newWidth, newHeight);
+}
+
+void Graphics::reshape(GLint newWidth, GLint newHeight)
+{
+	glViewport(0, 0, newWidth, newHeight);
+	windowWidth_ = newWidth;
+	windowHeight_ = newHeight;
+
+	camera_.screenRatio = static_cast<float>(windowWidth_) / windowHeight_;
+}
+
+
+

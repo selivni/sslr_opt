@@ -71,5 +71,16 @@ private:
 	MeshInfo loadMesh(int, uint&);
 	void checkInfo();
 	void createLights();
-	void createModel();
+}
+
+
+//openGL forbids passing pointers to functions that are class members
+namespace openGLFunctions
+{
+	void display();
+	void idle();
+	void keyboard(unsigned char, int, int);
+	void special(int, int, int);
+	void mouseMove(int, int);
+	void reshape(GLint, GLint);
 }
