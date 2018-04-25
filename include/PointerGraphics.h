@@ -1,2 +1,2 @@
 #pragma once
-GraphicalController* GraphicalControllerPointer;
+Graphics* GraphicalPointer;

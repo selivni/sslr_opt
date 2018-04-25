@@ -1,7 +1,14 @@
 #include "Graphics.h"
 #include "PointerGraphics.h"
 
-void Graphics::init(int windowWidth, int WindowHeight)
+TexturesInfo::TexturesInfo(int one, int two, bool three):
+	ambientIndex(one), opacityIndex(two), fake(three)
+	{}
+
+Graphics::~Graphics()
+	{}
+
+void Graphics::init(int windowWidth, int windowHeight)
 {
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
@@ -14,8 +21,10 @@ void Graphics::init(int windowWidth, int WindowHeight)
 	argv[1] = 0;
 	argv[0] = name;
 
-	textureImageWidthDefault_ = -1;
-	textureImageHeightDefault_ = -1;
+	textureImageWidth_ = -1;
+	textureImageHeight_ = -1;
+
+	lastTime_ = 0;
 
 	std::cout << "Initializing GLUT... " << std::flush;
 	glutInit(&argc, argv);
@@ -34,7 +43,7 @@ void Graphics::init(int windowWidth, int WindowHeight)
 	glutReshapeFunc(openGLFunctions::reshape);
 	mouseCaptured_ = false;
 	glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
-	glGlearColor(0.0, 0.0, 0.3, 0);
+	glClearColor(0.0, 0.0, 0.3, 0);
 	std::cout << "success" << std::endl;
 
 	std::cout << "Initializing GLEW... " << std::flush;
@@ -81,28 +90,54 @@ void Graphics::compileShaders()
 void Graphics::checkInfo()
 {
 	std::cout << "Checking what's loaded:" << std::endl;
-	for (uint i = 0; i < scene_->mNumMaterials; i++)
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		std::cout << i + 1 << ": ";
-		for (auto iter = materials_[i].second.begin();
-			 iter != materials_[i].second.end();
+		for (auto iter = materials_[i].begin();
+			 iter != materials_[i].end();
 			 iter++)
 		{
 			std::cout << iter->first << ' ';
 		}
 		std::cout << std::endl;
+		std::cout << "Textures: ambient = " << texturesInfo_[i].ambientIndex <<
+			", opacity = " << texturesInfo_[i].opacityIndex << " fake = " <<
+			texturesInfo_[i].fake << std::endl;
 	}
 }
 
-MeshInfo Graphics::loadMesh(int i, uint& length)
+std::vector<unsigned int> Graphics::concatFaces(aiMesh* mesh)
 {
-	std::pair<GLuint, int> result;
+	std::vector<unsigned int> result;
+	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+	{
+		if (mesh->mFaces[i].mNumIndices == 3)
+		{
+			for (unsigned int j = 0; j < mesh->mFaces[i].mNumIndices; j++)
+				result.push_back(mesh->mFaces[i].mIndices[j]);
+		} else if (mesh->mFaces[i].mNumIndices == 4)
+		{
+			unsigned int* indices = mesh->mFaces[i].mIndices;
+			for (unsigned int j = 0; j < 3; j++)
+				result.push_back(indices[j]);
+			for (unsigned int j = 0; j < 3; j++)
+				result.push_back(indices[j+1]);
+		} else
+			throw std::invalid_argument(
+				std::to_string(mesh->mFaces[i].mNumIndices) +
+				" vertices in a single face! Cant deal with it, aborting");
+	}
+	return result;
+}
+
+MeshInfo Graphics::loadMesh(int i, unsigned int& length)
+{
+	MeshInfo result;
 	GLuint shader;
-	uint material = scene_->mMeshes[i]->mMaterialIndex;
-	if (material >= 14)
-		shader = sponzaShaderTwo_;
-	else
-		shader = sponzaShaderOne_;
+	unsigned int material = scene_->mMeshes[i]->mMaterialIndex;
+
+	shader = modelShader_;
+	
 	glGenVertexArrays(1, &result.first);
 	glBindVertexArray(result.first);
 
@@ -159,7 +194,7 @@ MeshInfo Graphics::loadMesh(int i, uint& length)
 	return result;
 }
 
-bool Grahpics::loadTexture(const char* path)
+bool Graphics::loadTexture(const char* path)
 {
 	int width, height;
 	int channels;
@@ -170,7 +205,6 @@ bool Grahpics::loadTexture(const char* path)
 		std::cerr << "Failed to load texture " << path << std::endl;
 		return false;
 	}
-//There should be the filling of default width and height and comparsion afterwards
 	if (textureImageWidth_ == -1 && textureImageHeight_ == -1)
 	{
 		textureImageWidth_ = width;
@@ -180,27 +214,28 @@ bool Grahpics::loadTexture(const char* path)
 			std::string("is of a different size than others! This is "
 						"unacceptable!"));
 	rawTextures_.push_back(image);
+	return true;
 }
 
 void Graphics::concatTextures()
 {
-	unsigned int imageSize = textureImageWidth_ * textureImageHeight_;
+	unsigned int imageSize = textureImageWidth_ * textureImageHeight_ * 4;
 	if (textureImageWidth_ == -1 || textureImageHeight_ == -1)
 		return;
-	textureArray_ = new unsigned char[(texturesCount + opacityTexCount) *
-		textureImageWidth_ * textureImageHeight_];
+	textureArray_ = new unsigned char[(texturesCount_ + opacityTexCount_) *
+		imageSize];
 	for (unsigned int i = 0; i < texturesCount_ + opacityTexCount_; i++)
 	{
-		memcpy(textureArray_ + i * imageSize, rawTextures[i], imageSize *
+		std::memcpy(textureArray_ + i * imageSize, rawTextures_[i], imageSize *
 			sizeof(unsigned char));
-		SOIL_free_image_data(rawTextures[i]);
+		SOIL_free_image_data(rawTextures_[i]);
 	}
 }
 
 void Graphics::flushTextures()
 {
-	glGenTextures(1, &texture_); CHECK_GL_ERRORS
-	glBindTexture(GL_TEXTURE_2D_ARRAY, texture); CHECK_GL_ERRORS
+	glGenTextures(1, &textures_); CHECK_GL_ERRORS
+	glBindTexture(GL_TEXTURE_2D_ARRAY, textures_); CHECK_GL_ERRORS
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 4, GL_RGBA8, textureImageWidth_,
 		textureImageHeight_, texturesCount_ + opacityTexCount_); CHECK_GL_ERRORS
 
@@ -209,21 +244,17 @@ void Graphics::flushTextures()
 		GL_UNSIGNED_BYTE, textureArray_); CHECK_GL_ERRORS
 
 	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); CHECK_GL_ERRORS
-	glGenerateMipmap(texture_); CHECK_GL_ERRORS
+	glGenerateMipmap(GL_TEXTURE_2D_ARRAY); CHECK_GL_ERRORS
 
-	glBindTexture(GL_TAXTURE_2D_ARRAY, texture);
+//	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
 void Graphics::loadTextures()
 {
 	aiString path;
 	aiReturn error;
-	GLuint texture;
-	GLuint noTexture;
-	if (!loadTexture((std::string(MODEL_PATH) +
-		"/textures/sponza_no_tex.tga").data(), noTexture))
-			throw std::invalid_argument("Error: failed to load no_texture texture");
-	texturesCount_++;
+	texturesCount_ = 0;
+	opacityTexCount_ = 0;
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		if ((error = scene_->mMaterials[i]->GetTexture(
@@ -234,15 +265,22 @@ void Graphics::loadTextures()
 				if (data[j] == '\\')
 					data[j] = '/';
 			if (!loadTexture((std::string(MODEL_PATH) +
-				"/" + path.C_Str()).data(), texture))
-				texture = noTexture;
+				"/" + path.C_Str()).data()))
+				throw std::invalid_argument(std::string("Error: failed to"
+					" load") + path.C_Str());
 			else
 				texturesCount_++;
-		} else
-			texture = noTexture;
-		materials_[i].first[0] = texture;
-
+		} else if (!loadTexture((std::string(MODEL_PATH) +
+				"/textures/sponza_no_tex.tga").data()))
+			throw std::invalid_argument("Error: failed to load no_texture texture");
+		else
+		{
+			texturesInfo_[i].fake = true;
+			texturesCount_++;
+		}
+		texturesInfo_[i].ambientIndex = texturesCount_ - 1;
 	}
+
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		if ((error = scene_->mMaterials[i]->GetTexture(
@@ -253,13 +291,14 @@ void Graphics::loadTextures()
 				if (data[j] == '\\')
 					data[j] = '/';
 			if (!loadTexture((std::string(MODEL_PATH) +
-				"/" + path.C_Str()).data(), texture))
-				texture = 0;
+				"/" + path.C_Str()).data()))
+				throw std::invalid_argument(std::string("Error: failed to"
+					" load") + path.C_Str());
 			else
 				opacityTexCount_++;
-		} else
-			texture = 0;
-		materials_[i].first[1] = texture;
+			texturesInfo_[i].opacityIndex =
+				texturesCount_ + opacityTexCount_ - 1;
+		}
 	}
 
 	concatTextures();
@@ -276,29 +315,77 @@ void Graphics::createModel()
 {
 	compileShaders();
 
-	for (uint i = 0; i < scene_->mNumMaterials; i++)
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
-		VAOs listVAO;
-		MaterialInfo info;
-		info.first[0] = i;
-		info.first[1] = 0;
-		info.second = listVAO;
-		materials_.push_back(info);
+		VAOs meshes;
+		TexturesInfo material(-1, -1, false);
+		materials_.push_back(meshes);
+		texturesInfo_.push_back(material);
 	}
 
 	loadTextures();
 
-	for (uint i = 0; i < scene_->mNumMeshes; i++)
+	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
 	{
-		uint length;
+		unsigned int length;
 		MeshInfo meshInfo = loadMesh(i, length);
-		uint index = meshInfo.second;
+		unsigned int index = meshInfo.second;
 		meshInfo.second = length;
-		materials_[index].second.push_back(meshInfo);
+		materials_[index].push_back(meshInfo);
 	}
 	#ifdef GRAPHICS_M_DEBUG_SUPER
 	checkInfo();
 	#endif
+}
+
+void Graphics::updateFPS()
+{
+	int currentTime = glutGet(GLUT_ELAPSED_TIME);
+	std::cout << '\r'
+		<< "FPS: " << 1000 / (currentTime - lastTime_) << "      ";
+	lastTime_ = currentTime;
+}
+
+void Graphics::drawSponza()
+{
+	updateFPS();
+	GLint cameraLocation =
+		glGetUniformLocation(modelShader_, "camera"); CHECK_GL_ERRORS
+	GLint materialIndexLocation =
+		glGetUniformLocation(modelShader_, "material"); CHECK_GL_ERRORS
+	GLint cameraPosLoc =
+		glGetUniformLocation(modelShader_, "cameraPosition");
+			CHECK_GL_ERRORS
+	GLint textureLocation =
+		glGetUniformLocation(modelShader_, "textureArray"); CHECK_GL_ERRORS
+
+	glUseProgram(modelShader_); CHECK_GL_ERRORS
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
+		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
+	GLfloat camPos[3];
+	camPos[0] = camera_.position.x;
+	camPos[1] = camera_.position.y;
+	camPos[2] = camera_.position.z;
+	glUniform3fv(cameraPosLoc, 1, camPos);
+
+	glUniform1i(textureLocation, textures_);
+//	passLights(modelShader_);
+
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
+	{
+		VAOs meshes = materials_[i];
+		GLuint materialIndex = i;
+		glUniform1ui(materialIndexLocation, materialIndex);
+		for (auto iter = meshes.begin();
+			 iter != meshes.end();
+			 iter++)
+		{
+			glBindVertexArray(iter->first); CHECK_GL_ERRORS
+			glDrawElements(GL_TRIANGLES, iter->second, GL_UNSIGNED_INT, 0);
+				CHECK_GL_ERRORS
+			glBindVertexArray(0); CHECK_GL_ERRORS
+		}
+	}
 }
 
 void openGLFunctions::display()
@@ -331,7 +418,29 @@ void Graphics::idle()
 
 void openGLFunctions::keyboard(unsigned char key, int x, int y)
 {
-	GraphicalPointer->keyboard(key, x ,y);
+	GraphicalPointer->keyboard(key, x, y);
+}
+
+void Graphics::shutdown()
+{
+	glutDestroyWindow(glutGetWindow());
+	std::cout << std::endl;
+}
+
+void Graphics::startLoop()
+{
+	glutMainLoop();
+}
+
+void Graphics::toggleMouse()
+{
+	mouseCaptured_ = !mouseCaptured_;
+	if (mouseCaptured_)
+	{
+		glutWarpPointer(windowWidth_ / 2, windowHeight_ / 2);
+		glutSetCursor(GLUT_CURSOR_NONE);
+	} else
+		glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
 }
 
 void Graphics::keyboard(unsigned char key, int x, int y)
@@ -364,7 +473,7 @@ void openGLFunctions::special(int key, int x, int y)
 	GraphicalPointer->special(key, x, y);
 }
 
-void Grahpics::special(int key, int x, int y)
+void Graphics::special(int key, int x, int y)
 {
 	if (key == GLUT_KEY_RIGHT)
 		camera_.rotateY(0.02);

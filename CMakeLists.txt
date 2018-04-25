@@ -24,7 +24,7 @@ add_definitions(-DSPONZA_MTL="${MODELS_ROOT}/sponza/sponza.mtl")
 add_definitions(-DPROJECT_NAME="${PROJECT_NAME}")
 add_definitions(-DWINDOWWIDTH_DEFAULT=800)
 add_definitions(-DWINDOWHEIGHT_DEFAULT=600)
-add_definitions(-DMODEL_PATH="${MODELS_ROOT}")
+add_definitions(-DMODEL_PATH="${MODELS_ROOT}/sponza")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

@@ -1,27 +1,46 @@
+#pragma once
 #include <vector>
+#include <iostream>
+#include <list>
+#include <cstring>
 
+#include "scene.h"
+#include "vector3.h"
+#include "Utility.h"
+#include "SOIL.h"
+
+
+#define GRAPHICS_M_DEBUG_SUPER
 
 //GLuint - VAO, uint - mesh vertices count
-typedef std::pair<GLuint, uint> MeshInfo;
+typedef std::pair<GLuint, unsigned int> MeshInfo;
 
 typedef std::list<MeshInfo> VAOs;
-//GLuint - texture index; VAOs - meshes VAO's
-typedef std::pair<GLuint[2], VAOs> MaterialInfo;
+//GLuint - texture index; VAOs - meshes' VAOs
+//typedef std::pair<GLuint[2], VAOs> MaterialInfo;
+//1 - ambient texture index, 2 - opacity texture index
+struct TexturesInfo
+{
+	int ambientIndex;
+	int opacityIndex;//Can be -1
+	bool fake;//Only an ambient texture can be fake
+	TexturesInfo(int, int, bool);
+};
 
 class Graphics
 {
 public:
-	void init(int windowWidth, windowHeight);
+	void init(int windowWidth, int windowHeight);
 	void createMap(const aiScene* scene);
 	void shutdown();
-	void specialFunc(int, int, int);
-	void keyboardFunc(unsigned char, int, int);
+	void special(int, int, int);
+	void keyboard(unsigned char, int, int);
 	void mouseMove(int, int);
-	void reshapeFunc(GLint, GLint);
+	void reshape(GLint, GLint);
 	void display();
 	void idle();
 	void startLoop();
-	~GraphicalController();
+	~Graphics();
 private:
 	const aiScene* scene_;
 	
@@ -41,7 +60,8 @@ private:
 	GLuint textures_;
 	GLuint texturesCount_;
 	GLuint opacityTexCount_;
-	std::vector<MaterialInfo> materials_;
+	std::vector<VAOs> materials_;
+	std::vector<TexturesInfo> texturesInfo_;
 
 	unsigned int sphereMeshSize_;
 
@@ -51,17 +71,13 @@ private:
 	int lastTime_;
 	unsigned int frameCounter_;
 
-	LightsArray lights_;
-	void updateLights();
-	void passLights(GLuint);
+//	LightsArray lights_;
+//	void updateLights();
+//	void passLights(GLuint);
 
-	void createCamera();
 	void updateFPS();
-	void prepareTextures(GLuint);
-	void unprepareTextures();
-	void prepareProgram(GLuint);
-
-	void drawLights();
+	
+//	void drawLights();
 	void drawSponza();
 
 	std::vector<unsigned char*> rawTextures_;
@@ -71,13 +87,12 @@ private:
 	void loadTextures();
 	void concatTextures();
 	void flushTextures();
-	bool loadTexture(const char*, GLuint&);
-	void compileShaders();
+	bool loadTexture(const char*);
+
 	std::vector<unsigned int> concatFaces(aiMesh*);
-	MeshInfo loadMesh(int, uint&);
-	void checkInfo();
-	void createLights();
-}
+	MeshInfo loadMesh(int, unsigned int&);
+//	void createLights();
+};
 
 
 //openGL forbids passing pointers to functions that are class members

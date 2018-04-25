@@ -13,7 +13,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
   "GRAPH_OBJ=\"/home/mark/programming/diploma/models/\""
-  "MODEL_PATH=\"/home/mark/programming/diploma/models\""
+  "MODEL_PATH=\"/home/mark/programming/diploma/models/sponza\""
   "PROJECT_NAME=\"sslr_opt\""
   "SPONZA_MTL=\"/home/mark/programming/diploma/models/sponza/sponza.mtl\""
   "SPONZA_OBJ=\"/home/mark/programming/diploma/models/sponza/sponza.obj\""

@@ -1,0 +1,34 @@
+#version 330 core
+
+in vec3 uv;
+in vec3 norm;
+in vec3 pointPosition;
+
+uniform uint material;
+
+uniform sampler2DArray textures;
+
+out vec4 outColor;
+
+void main()
+{
+	float materialIndex = material;
+	vec3 texCoord = vec3(uv.x, 1 - uv.y, materialIndex) + norm - norm;/*DELETE NORM AFTERWARDS*/
+	if (material == uint(1))
+	{
+		vec3 opacCoord = vec3(uv.x, 1 - uv.y, 27.0);
+		if (texture(textures, opacCoord).y < 0.3)
+			discard;
+	} else if (material == uint(3))
+	{
+		vec3 opacCoord = vec3(uv.x, 1 - uv.y, 28.0);
+		if (texture(textures, opacCoord).y < 0.3)
+			discard;
+	} else if (material == uint(22))
+	{
+		vec3 opacCoord = vec3(uv.x, 1 - uv.y, 29.0);
+		if (texture(textures, opacCoord).y < 0.3)
+			discard;
+	}
+	outColor = texture(textures, texCoord);
+}
