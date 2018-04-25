@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o"
   "CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o"
   "CMakeFiles/sslr_opt.dir/source/main.cpp.o"
   "sslr_opt.pdb"

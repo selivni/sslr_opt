@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+../include/Graphics.h
+
+../include/PointerGraphics.h
+
 ../include/SceneLoader.h
 stdexcept
 -
@@ -271,6 +275,12 @@ vector3.h
 ../shared/assimp/include/vector3.h
 cmath
 -
+
+/home/mark/programming/diploma/source/Graphics.cpp
+Graphics.h
+/home/mark/programming/diploma/source/Graphics.h
+PointerGraphics.h
+/home/mark/programming/diploma/source/PointerGraphics.h
 
 /home/mark/programming/diploma/source/SceneLoader.cpp
 SceneLoader.h

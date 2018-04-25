@@ -123,6 +123,33 @@ sslr_opt/fast:
 	$(MAKE) -f CMakeFiles/sslr_opt.dir/build.make CMakeFiles/sslr_opt.dir/build
 .PHONY : sslr_opt/fast
 
+source/Graphics.o: source/Graphics.cpp.o
+
+.PHONY : source/Graphics.o
+
+# target to build an object file
+source/Graphics.cpp.o:
+	$(MAKE) -f CMakeFiles/sslr_opt.dir/build.make CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o
+.PHONY : source/Graphics.cpp.o
+
+source/Graphics.i: source/Graphics.cpp.i
+
+.PHONY : source/Graphics.i
+
+# target to preprocess a source file
+source/Graphics.cpp.i:
+	$(MAKE) -f CMakeFiles/sslr_opt.dir/build.make CMakeFiles/sslr_opt.dir/source/Graphics.cpp.i
+.PHONY : source/Graphics.cpp.i
+
+source/Graphics.s: source/Graphics.cpp.s
+
+.PHONY : source/Graphics.s
+
+# target to generate assembly for a file
+source/Graphics.cpp.s:
+	$(MAKE) -f CMakeFiles/sslr_opt.dir/build.make CMakeFiles/sslr_opt.dir/source/Graphics.cpp.s
+.PHONY : source/Graphics.cpp.s
+
 source/SceneLoader.o: source/SceneLoader.cpp.o
 
 .PHONY : source/SceneLoader.o
@@ -186,6 +213,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... sslr_opt"
+	@echo "... source/Graphics.o"
+	@echo "... source/Graphics.i"
+	@echo "... source/Graphics.s"
 	@echo "... source/SceneLoader.o"
 	@echo "... source/SceneLoader.i"
 	@echo "... source/SceneLoader.s"

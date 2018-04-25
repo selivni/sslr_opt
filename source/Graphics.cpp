@@ -13,6 +13,10 @@ void Graphics::init(int windowWidth, int WindowHeight)
 	char name[] = PROJECT_NAME;
 	argv[1] = 0;
 	argv[0] = name;
+
+	textureImageWidthDefault_ = -1;
+	textureImageHeightDefault_ = -1;
+
 	std::cout << "Initializing GLUT... " << std::flush;
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE |
@@ -52,9 +56,9 @@ void Graphics::createMap(const aiScene* scene)
 	createModel();
 	std::cout << "success" << std::endl;
 
-	std::cout << "Creating lights... " << std::flush;
+/*	std::cout << "Creating lights... " << std::flush;
 	createLights();
-	std::cout << "success" << std::endl;
+	std::cout << "success" << std::endl;*/
 }
 
 void Graphics::createCamera()
@@ -80,7 +84,7 @@ void Graphics::checkInfo()
 	for (uint i = 0; i < scene_->mNumMaterials; i++)
 	{
 		std::cout << i + 1 << ": ";
-		for (VAOs::iterator iter = materials_[i].second.begin();
+		for (auto iter = materials_[i].second.begin();
 			 iter != materials_[i].second.end();
 			 iter++)
 		{
@@ -157,7 +161,57 @@ MeshInfo Graphics::loadMesh(int i, uint& length)
 
 bool Grahpics::loadTexture(const char* path)
 {
-	
+	int width, height;
+	int channels;
+	unsigned char* image = SOIL_load_image(path,
+		&width, &height, &channels, SOIL_LOAD_RGBA);
+	if (image == NULL)
+	{
+		std::cerr << "Failed to load texture " << path << std::endl;
+		return false;
+	}
+//There should be the filling of default width and height and comparsion afterwards
+	if (textureImageWidth_ == -1 && textureImageHeight_ == -1)
+	{
+		textureImageWidth_ = width;
+		textureImageHeight_ = height;
+	} else if (textureImageWidth_ != width || textureImageHeight_ != height)
+		throw std::invalid_argument(std::string("Error: texture ") + path + 
+			std::string("is of a different size than others! This is "
+						"unacceptable!"));
+	rawTextures_.push_back(image);
+}
+
+void Graphics::concatTextures()
+{
+	unsigned int imageSize = textureImageWidth_ * textureImageHeight_;
+	if (textureImageWidth_ == -1 || textureImageHeight_ == -1)
+		return;
+	textureArray_ = new unsigned char[(texturesCount + opacityTexCount) *
+		textureImageWidth_ * textureImageHeight_];
+	for (unsigned int i = 0; i < texturesCount_ + opacityTexCount_; i++)
+	{
+		memcpy(textureArray_ + i * imageSize, rawTextures[i], imageSize *
+			sizeof(unsigned char));
+		SOIL_free_image_data(rawTextures[i]);
+	}
+}
+
+void Graphics::flushTextures()
+{
+	glGenTextures(1, &texture_); CHECK_GL_ERRORS
+	glBindTexture(GL_TEXTURE_2D_ARRAY, texture); CHECK_GL_ERRORS
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 4, GL_RGBA8, textureImageWidth_,
+		textureImageHeight_, texturesCount_ + opacityTexCount_); CHECK_GL_ERRORS
+
+	glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, textureImageWidth_,
+		textureImageHeight_, texturesCount_ + opacityTexCount_, GL_RGBA,
+		GL_UNSIGNED_BYTE, textureArray_); CHECK_GL_ERRORS
+
+	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); CHECK_GL_ERRORS
+	glGenerateMipmap(texture_); CHECK_GL_ERRORS
+
+	glBindTexture(GL_TAXTURE_2D_ARRAY, texture);
 }
 
 void Graphics::loadTextures()
@@ -207,6 +261,10 @@ void Graphics::loadTextures()
 			texture = 0;
 		materials_[i].first[1] = texture;
 	}
+
+	concatTextures();
+	flushTextures();
+
 	std::cout << "Loaded " << texturesCount_ << '/'
 			  << scene_->mNumMaterials << " possible textures" << std::endl;
 	if (opacityTexCount_ != 0)
@@ -228,7 +286,7 @@ void Graphics::createModel()
 		materials_.push_back(info);
 	}
 
-//	loadTextures();
+	loadTextures();
 
 	for (uint i = 0; i < scene_->mNumMeshes; i++)
 	{
@@ -251,7 +309,7 @@ void openGLFunctions::display()
 void Graphics::display()
 {
 	glEnable(GL_DEPTH_TEST); CHECK_GL_ERRORS
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
 
 //	drawLights();
@@ -351,6 +409,3 @@ void Graphics::reshape(GLint newWidth, GLint newHeight)
 
 	camera_.screenRatio = static_cast<float>(windowWidth_) / windowHeight_;
 }
-
-
-

@@ -4,6 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/mark/programming/diploma/source/Graphics.cpp" "/home/mark/programming/diploma/build/CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o"
   "/home/mark/programming/diploma/source/SceneLoader.cpp" "/home/mark/programming/diploma/build/CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o"
   "/home/mark/programming/diploma/source/main.cpp" "/home/mark/programming/diploma/build/CMakeFiles/sslr_opt.dir/source/main.cpp.o"
   )

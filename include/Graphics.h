@@ -1,3 +1,5 @@
+#include <vector>
+
 
 //GLuint - VAO, uint - mesh vertices count
 typedef std::pair<GLuint, uint> MeshInfo;
@@ -22,7 +24,7 @@ public:
 	~GraphicalController();
 private:
 	const aiScene* scene_;
-
+	
 	int windowWidth_;
 	int windowHeight_;
 
@@ -36,17 +38,15 @@ private:
 
 	GL::Camera camera_;
 
-	std::vector<GLuint> textures_;
+	GLuint textures_;
 	GLuint texturesCount_;
 	GLuint opacityTexCount_;
-	GLuint opTexPointer_;
 	std::vector<MaterialInfo> materials_;
 
 	unsigned int sphereMeshSize_;
 
-	GLuint sponzaShaderOne_;
-	GLuint sponzaShaderTwo_;
-	GLuint sphereShader_;
+	GLuint modelShader_;
+//	GLuint sphereShader_;
 
 	int lastTime_;
 	unsigned int frameCounter_;
@@ -64,7 +64,13 @@ private:
 	void drawLights();
 	void drawSponza();
 
+	std::vector<unsigned char*> rawTextures_;
+	unsigned char* textureArray_;
+	int textureImageWidth_;
+	int textureImageHeight_;
 	void loadTextures();
+	void concatTextures();
+	void flushTextures();
 	bool loadTexture(const char*, GLuint&);
 	void compileShaders();
 	std::vector<unsigned int> concatFaces(aiMesh*);
