@@ -62,14 +62,20 @@ void Camera::rotateY(const float angle) {
     rot[0][0] = rot[2][2] = cosf(angle);
     rot[0][2] = -sinf(angle);
     rot[2][0] = sinf(angle);
-    direction = normalize((rot * vec4(direction, 0)).xyz());
+	direction = normalize((rot * vec4(direction, 0)).xyz());
     up = normalize((rot * vec4(up, 0)).xyz());
 }
 
 void Camera::rotateTop(const float angle) {
     vec3 left = cross(up, direction);
-    direction = normalize(direction * cosf(angle) + up * sinf(angle));
-    up = normalize(cross(direction, left));
+    vec3 newDirection = normalize(direction * cosf(angle) + up * sinf(angle));
+	vec3 newUp = normalize(cross(newDirection, left));
+	if (newUp.y < 0)
+		return;
+	direction = newDirection;
+//	direction = normalize(direction * cosf(angle) + up * sinf(angle));
+//	up = normalize(cross(direction, left));
+	up = newUp;
 }
 
 }

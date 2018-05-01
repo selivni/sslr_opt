@@ -11,6 +11,7 @@
 
 
 #define GRAPHICS_M_DEBUG_SUPER
+#undef GRAPHICS_M_DEBUG_SUPER
 
 //GLuint - VAO, uint - mesh vertices count
 typedef std::pair<GLuint, unsigned int> MeshInfo;

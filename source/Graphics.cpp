@@ -72,7 +72,7 @@ void Graphics::createMap(const aiScene* scene)
 
 void Graphics::createCamera()
 {
-	camera_.angle = 45.0f / 180.0f * M_PI;
+	camera_.angle = 90.0f / 180.0f * M_PI;
 	camera_.direction = VM::vec3(0, 0.3, -1);
 	camera_.position = VM::vec3(0, 100, 0);
 	camera_.screenRatio = static_cast<float>(windowWidth_) / windowHeight_;
@@ -466,6 +466,10 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	}
 	else if (key == 'm' || key == 'M')
 		toggleMouse();
+	else if (key == (char)23)
+		camera_.goForward(1.0);
+	else if (key == (char)19)
+		camera_.goBack(1.0);
 }
 
 void openGLFunctions::special(int key, int x, int y)
