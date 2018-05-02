@@ -28,6 +28,15 @@ struct TexturesInfo
 	TexturesInfo(int, int, bool);
 };
 
+struct SslrInfo
+{
+	bool enabled;
+	GLuint mrtProgram;
+	GLuint drawBuffersProgram;
+	SslrInfo();
+	void compileShaders();
+};
+
 class Graphics
 {
 public:
@@ -93,6 +102,8 @@ private:
 	std::vector<unsigned int> concatFaces(aiMesh*);
 	MeshInfo loadMesh(int, unsigned int&);
 //	void createLights();
+
+	SslrInfo sslr_;
 };
 
 

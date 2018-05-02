@@ -5,6 +5,19 @@ TexturesInfo::TexturesInfo(int one, int two, bool three):
 	ambientIndex(one), opacityIndex(two), fake(three)
 	{}
 
+SslrInfo::SslrInfo(): enabled(false), mrtProgram(0), drawBuffersProgram(0)
+	{}
+
+void SslrInfo::compileShaders()
+{
+/*
+	mrtProgram_ = GL::CompileShaderProgram("MRTSponza");
+		CHECK_GL_ERRORS
+	drawBuffersProgram_ = GL::CompileShaderProgram("BufferSponza");
+		CHECK_GL_ERRORS
+*/
+}
+
 Graphics::~Graphics()
 	{}
 
@@ -33,6 +46,7 @@ void Graphics::init(int windowWidth, int windowHeight)
 	glutInitContextVersion(3, 3);
 	glutInitWindowPosition(-1, -1);
 	glutInitWindowSize(windowWidth, windowHeight);
+	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); CHECK_GL_ERRORS
 	glutCreateWindow(PROJECT_NAME);
 
 	glutDisplayFunc(openGLFunctions::display);
@@ -44,12 +58,13 @@ void Graphics::init(int windowWidth, int windowHeight)
 	mouseCaptured_ = false;
 	glutSetCursor(GLUT_CURSOR_RIGHT_ARROW);
 	glClearColor(0.0, 0.0, 0.3, 0);
-	std::cout << "success" << std::endl;
+	std::cout << "success" << std::endl; CHECK_GL_ERRORS
 
 	std::cout << "Initializing GLEW... " << std::flush;
-	putenv((char*)"MESA_GL_VERSION_OVERRIDE=3.3COMPAT");
-	glewExperimental = true;
+	putenv((char*)"MESA_GL_VERSION_OVERRIDE=3.3COMPAT"); CHECK_GL_ERRORS
+	glewExperimental = true; CHECK_GL_ERRORS
 	glewInit();
+	glGetError();
 	std::cout << "success" << std::endl;
 }
 
@@ -85,6 +100,7 @@ void Graphics::compileShaders()
 {
 	modelShader_ = GL::CompileShaderProgram("sponza");
 		CHECK_GL_ERRORS
+	sslr_.compileShaders();
 }
 
 void Graphics::checkInfo()
@@ -243,7 +259,6 @@ void Graphics::flushTextures()
 		textureImageHeight_, texturesCount_ + opacityTexCount_, GL_RGBA,
 		GL_UNSIGNED_BYTE, textureArray_); CHECK_GL_ERRORS
 
-	glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST); CHECK_GL_ERRORS
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY); CHECK_GL_ERRORS
 
 //	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
@@ -386,6 +401,7 @@ void Graphics::drawSponza()
 			glBindVertexArray(0); CHECK_GL_ERRORS
 		}
 	}
+	glUseProgram(0);
 }
 
 void openGLFunctions::display()
@@ -470,6 +486,8 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 		camera_.goForward(1.0);
 	else if (key == (char)19)
 		camera_.goBack(1.0);
+	else if (key == 'O')
+		sslr_.enabled = !sslr_.enabled; 
 }
 
 void openGLFunctions::special(int key, int x, int y)
