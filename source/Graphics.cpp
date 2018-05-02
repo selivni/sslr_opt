@@ -5,17 +5,61 @@ TexturesInfo::TexturesInfo(int one, int two, bool three):
 	ambientIndex(one), opacityIndex(two), fake(three)
 	{}
 
-SslrInfo::SslrInfo(): enabled(false), mrtProgram(0), drawBuffersProgram(0)
+SslrInfo::SslrInfo(): enabled_(false), mrtProgram_(0), drawBuffersProgram_(0)
 	{}
 
 void SslrInfo::compileShaders()
 {
-/*
+
 	mrtProgram_ = GL::CompileShaderProgram("MRTSponza");
 		CHECK_GL_ERRORS
 	drawBuffersProgram_ = GL::CompileShaderProgram("BufferSponza");
 		CHECK_GL_ERRORS
-*/
+
+}
+
+void SslrInfo::prepareBuffers()
+{
+	prepareTextures();
+	glGenRenderbuffers(1, &frameBuffer_);
+}
+
+void SslrInfo::setupBufferTexture(GLuint texture)
+{
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void SslrInfo::prepareTextures()
+{
+	GLuint colour, normal, reflection, depth;
+	glGenTextures(1, &colour);
+	glGenTextures(1, &normal);
+	glGenTextures(1, &reflection);
+	glGenTextures(1, &depth);
+	
+	setupBufferTexture(colour);
+	setupBufferTexture(normal);
+	setupBufferTexture(reflection);
+	setupBufferTexture(depth);
+
+	glBindTexture(GL_TEXTURE_2D, colour);
+	glTexImage2D(GL_TEXTURE_2D, 0, );
+}
+
+bool SslrInfo::flip()
+{
+	return enabled_ = !enabled_;
 }
 
 Graphics::~Graphics()
@@ -71,6 +115,11 @@ void Graphics::init(int windowWidth, int windowHeight)
 void Graphics::createMap(const aiScene* scene)
 {
 	scene_ = scene;
+
+	compileShaders();
+//	sslr_.compileShaders();
+
+//	sslr_.prepareBuffers();
 	
 	std::cout << "Setting camera... " << std::flush;
 	createCamera();
@@ -100,7 +149,6 @@ void Graphics::compileShaders()
 {
 	modelShader_ = GL::CompileShaderProgram("sponza");
 		CHECK_GL_ERRORS
-	sslr_.compileShaders();
 }
 
 void Graphics::checkInfo()
@@ -252,6 +300,10 @@ void Graphics::flushTextures()
 {
 	glGenTextures(1, &textures_); CHECK_GL_ERRORS
 	glBindTexture(GL_TEXTURE_2D_ARRAY, textures_); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D_ARRAY,
+		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D_ARRAY,
+		GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR); CHECK_GL_ERRORS
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 4, GL_RGBA8, textureImageWidth_,
 		textureImageHeight_, texturesCount_ + opacityTexCount_); CHECK_GL_ERRORS
 
@@ -328,8 +380,6 @@ void Graphics::loadTextures()
 
 void Graphics::createModel()
 {
-	compileShaders();
-
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		VAOs meshes;
@@ -487,7 +537,7 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	else if (key == (char)19)
 		camera_.goBack(1.0);
 	else if (key == 'O')
-		sslr_.enabled = !sslr_.enabled; 
+		sslr_.flip();
 }
 
 void openGLFunctions::special(int key, int x, int y)

@@ -28,13 +28,27 @@ struct TexturesInfo
 	TexturesInfo(int, int, bool);
 };
 
-struct SslrInfo
+class SslrInfo
 {
-	bool enabled;
-	GLuint mrtProgram;
-	GLuint drawBuffersProgram;
+public:
 	SslrInfo();
+	bool flip();
 	void compileShaders();
+	void prepareBuffers();
+	void prepareTextures();
+
+	bool enabled();
+	GLuint frameBuffer();
+	GLuint mrtProgram();
+	GLuint drawBuffersProgram();
+
+private:
+	bool enabled_;
+	GLuint frameBuffer_;
+	GLuint mrtProgram_;
+	GLuint drawBuffersProgram_;
+
+	void setupBufferTexture(GLuint texture);
 };
 
 class Graphics
