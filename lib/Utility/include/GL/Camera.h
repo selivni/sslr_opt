@@ -21,6 +21,9 @@ class Camera
                const float zfar);
 
         VM::mat4 getMatrix();
+		VM::mat4 getModel();
+		VM::mat4 getView();
+		VM::mat4 getProjection();
 
         void rotateLeft(const float angle=0.05f);
         void rotateTop(const float angle=0.05f);

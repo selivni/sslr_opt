@@ -52,6 +52,47 @@ mat4 Camera::getMatrix() {
     return projection * Minv * Tr;
 }
 
+mat4 Camera::getModel()
+{
+	mat4 Model(1);
+
+	Model[3] = vec4(-position, 1);
+	Model = transpose(Model);
+
+	return Model;
+}
+
+mat4 Camera::getView()
+{
+	vec3 z = normalize(direction);
+    vec3 x = normalize(cross(up, z));
+    vec3 y = normalize(cross(z, x));
+
+	mat4 View(1);
+
+    View[0] = vec4(x, 0);
+    View[1] = vec4(y, 0);
+    View[2] = vec4(z, 0);
+    View = transpose(View);
+    View = View.unmatrixN3();
+	return View;
+}
+
+mat4 Camera::getProjection()
+{
+    float f = 1 / tan(angle / 2);
+    float A = (zfar + znear) / (znear - zfar);
+    float B = (2 * zfar * znear) / (znear - zfar);
+
+    mat4 projection(0.0f);
+    projection[0][0] = f / screenRatio;
+    projection[1][1] = f;
+    projection[2][2] = A;
+    projection[2][3] = B;
+    projection[3][2] = -1;
+	return projection;
+}
+
 void Camera::rotateLeft(const float angle) {
     direction = normalize(direction * cosf(angle)
                 + normalize(cross(up, direction)) * sinf(angle));

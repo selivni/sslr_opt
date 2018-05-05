@@ -125,6 +125,18 @@ void SslrInfo::prepareTextures()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void SslrInfo::refreshBuffers()
+{
+	glDeleteTextures(1, &colour_);
+	glDeleteTextures(1, &normal_);
+	glDeleteTextures(1, &reflection_);
+	glDeleteTextures(1, &depthBuffer_);
+
+	glDeleteFramebuffers(1, &frameBuffer_);
+
+	prepareBuffers();
+}
+
 bool SslrInfo::flip()
 {
 	return enabled_ = !enabled_;
@@ -656,6 +668,22 @@ void Graphics::drawFinalImage()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
 	glUseProgram(sslr_.drawBuffersProgram()); CHECK_GL_ERRORS
 	
+	GLint cameraLocation =
+		glGetUniformLocation(sslr_.drawBuffersProgram(), "camera"); CHECK_GL_ERRORS
+
+	GLint modelLocation =
+		glGetUniformLocation(sslr_.drawBuffersProgram(), "model"); CHECK_GL_ERRORS
+
+	GLint viewLocation =
+		glGetUniformLocation(sslr_.drawBuffersProgram(), "view"); CHECK_GL_ERRORS
+
+	GLint projectionLocation =
+		glGetUniformLocation(sslr_.drawBuffersProgram(), "projection"); CHECK_GL_ERRORS
+
+	GLint cameraPosLoc =
+		glGetUniformLocation(sslr_.mrtProgram(), "cameraPosition");
+			CHECK_GL_ERRORS
+
 	GLint colourLocation = glGetUniformLocation(
 		sslr_.drawBuffersProgram(), "colour"); CHECK_GL_ERRORS
 	GLint normalLocation = glGetUniformLocation(
@@ -664,6 +692,21 @@ void Graphics::drawFinalImage()
 		sslr_.drawBuffersProgram(), "reflection"); CHECK_GL_ERRORS
 	GLint depthLocation = glGetUniformLocation(
 		sslr_.drawBuffersProgram(), "depth"); CHECK_GL_ERRORS
+
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
+		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
+	glUniformMatrix4fv(modelLocation, 1, GL_TRUE,
+		camera_.getModel().data().data()); CHECK_GL_ERRORS
+	glUniformMatrix4fv(viewLocation, 1, GL_TRUE,
+		camera_.getView().data().data()); CHECK_GL_ERRORS
+	glUniformMatrix4fv(projectionLocation, 1, GL_TRUE,
+		camera_.getProjection().data().data()); CHECK_GL_ERRORS
+
+	GLfloat camPos[3];
+	camPos[0] = camera_.position.x;
+	camPos[1] = camera_.position.y;
+	camPos[2] = camera_.position.z;
+	glUniform3fv(cameraPosLoc, 1, camPos);
 
 	glUniform1i(colourLocation, 0); CHECK_GL_ERRORS
 	glUniform1i(normalLocation, 1); CHECK_GL_ERRORS
@@ -854,6 +897,7 @@ void Graphics::reshape(GLint newWidth, GLint newHeight)
 		windowHeight_ << std::endl;
 
 	sslr_.setWindowSize(newWidth, newHeight);
+	sslr_.refreshBuffers();
 
 	camera_.screenRatio = static_cast<float>(windowWidth_) / windowHeight_;
 }

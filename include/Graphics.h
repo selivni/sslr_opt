@@ -45,7 +45,7 @@ public:
 	bool flip();
 	void compileShaders();
 	void prepareBuffers();
-//	void refreshBuffers();//after the reshape
+	void refreshBuffers();
 	void prepareTextures();
 	void prepareQuad();
 
@@ -79,7 +79,6 @@ private:
 	GLuint reflection_;
 
 	GLuint depthBuffer_;
-	GLuint depthRenderBuffer_;
 
 	int windowWidth_;
 	int windowHeight_;
