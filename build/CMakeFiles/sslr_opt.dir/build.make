@@ -161,6 +161,7 @@ sslr_opt: /usr/lib/x86_64-linux-gnu/libGLEW.so
 sslr_opt: /usr/lib/x86_64-linux-gnu/libglut.so
 sslr_opt: /usr/lib/x86_64-linux-gnu/libGLU.so
 sslr_opt: /usr/lib/x86_64-linux-gnu/libGL.so
+sslr_opt: /usr/lib/x86_64-linux-gnu/libjpeg.so
 sslr_opt: CMakeFiles/sslr_opt.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/mark/programming/diploma/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable sslr_opt"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/sslr_opt.dir/link.txt --verbose=$(VERBOSE)

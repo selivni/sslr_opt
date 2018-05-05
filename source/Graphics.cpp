@@ -5,7 +5,8 @@ TexturesInfo::TexturesInfo(int one, int two, bool three):
 	ambientIndex(one), opacityIndex(two), fake(three)
 	{}
 
-SslrInfo::SslrInfo(): enabled_(false), mrtProgram_(0), drawBuffersProgram_(0)
+SslrInfo::SslrInfo(): enabled_(false), mrtProgram_(0), drawBuffersProgram_(0),
+	pictureNumberCounter_(0)
 	{}
 
 void SslrInfo::compileShaders()
@@ -18,43 +19,110 @@ void SslrInfo::compileShaders()
 
 }
 
+void SslrInfo::setWindowSize(int width, int height)
+{
+	windowWidth_ = width;
+	windowHeight_ = height;
+}
+
+const GLfloat SslrInfo::simpleQuad[]=
+	{
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f
+	};
+
+void SslrInfo::prepareQuad()
+{
+	glGenVertexArrays(1, &quadVAO_);
+	glBindVertexArray(quadVAO_); CHECK_GL_ERRORS
+	glGenBuffers(1, &quadVBO_); CHECK_GL_ERRORS
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO_); CHECK_GL_ERRORS
+	glBufferData(GL_ARRAY_BUFFER, sizeof(simpleQuad), simpleQuad,
+		GL_STATIC_DRAW); CHECK_GL_ERRORS
+	GLuint vertLocation = glGetAttribLocation(drawBuffersProgram(),
+		"point"); CHECK_GL_ERRORS
+	glEnableVertexAttribArray(vertLocation); CHECK_GL_ERRORS
+	glVertexAttribPointer(vertLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		CHECK_GL_ERRORS
+	
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
 void SslrInfo::prepareBuffers()
 {
+	glGenFramebuffers(1, &frameBuffer_); CHECK_GL_ERRORS
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_); CHECK_GL_ERRORS
+
 	prepareTextures();
-	glGenRenderbuffers(1, &frameBuffer_);
+
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D, colour_, 0); CHECK_GL_ERRORS
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+		GL_TEXTURE_2D, normal_, 0); CHECK_GL_ERRORS
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
+		GL_TEXTURE_2D, reflection_, 0); CHECK_GL_ERRORS
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+		GL_TEXTURE_2D, depthBuffer_, 0); CHECK_GL_ERRORS
+/*
+	glGenRenderbuffers(1, &depthBuffer_);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer_); CHECK_GL_ERRORS
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+		windowWidth_, windowHeight_); CHECK_GL_ERRORS
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+		GL_RENDERBUFFER, depthBuffer_); CHECK_GL_ERRORS
+*/
+	glBindRenderbuffer(GL_RENDERBUFFER, 0); CHECK_GL_ERRORS
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); CHECK_GL_ERRORS
 }
 
 void SslrInfo::setupBufferTexture(GLuint texture)
 {
-	glBindTexture(GL_TEXTURE_2D, texture);
+//	glBindTexture(GL_TEXTURE_2D, texture); CHECK_GL_ERRORS
 
 	glTexParameteri(GL_TEXTURE_2D,
-		GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
-		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
-		GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		GL_TEXTURE_MIN_FILTER, GL_NEAREST); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
-		GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		GL_TEXTURE_MAG_FILTER, GL_NEAREST); CHECK_GL_ERRORS
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+//	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void SslrInfo::prepareTextures()
 {
-	GLuint colour, normal, reflection, depth;
-	glGenTextures(1, &colour);
-	glGenTextures(1, &normal);
-	glGenTextures(1, &reflection);
-	glGenTextures(1, &depth);
+	glGenTextures(1, &colour_);
+	glGenTextures(1, &normal_);
+	glGenTextures(1, &reflection_);
+	glGenTextures(1, &depthBuffer_);
 	
-	setupBufferTexture(colour);
-	setupBufferTexture(normal);
-	setupBufferTexture(reflection);
-	setupBufferTexture(depth);
 
-	glBindTexture(GL_TEXTURE_2D, colour);
-	glTexImage2D(GL_TEXTURE_2D, 0, );
+	glBindTexture(GL_TEXTURE_2D, colour_); CHECK_GL_ERRORS
+	setupBufferTexture(colour_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth_, windowHeight_, 0, 
+		GL_RGB, GL_UNSIGNED_BYTE, 0); CHECK_GL_ERRORS
+	glBindTexture(GL_TEXTURE_2D, normal_); CHECK_GL_ERRORS
+	setupBufferTexture(normal_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth_, windowHeight_, 0, 
+		GL_RGB, GL_FLOAT, 0); CHECK_GL_ERRORS
+	glBindTexture(GL_TEXTURE_2D, reflection_); CHECK_GL_ERRORS
+	setupBufferTexture(reflection_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, windowWidth_, windowHeight_, 0,
+		GL_RED, GL_FLOAT, 0); CHECK_GL_ERRORS
+	glBindTexture(GL_TEXTURE_2D, depthBuffer_); CHECK_GL_ERRORS
+	setupBufferTexture(depthBuffer_); CHECK_GL_ERRORS
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, windowWidth_,
+		windowHeight_, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0); CHECK_GL_ERRORS
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 bool SslrInfo::flip()
@@ -62,13 +130,84 @@ bool SslrInfo::flip()
 	return enabled_ = !enabled_;
 }
 
+GLuint SslrInfo::frameBuffer()
+	{return frameBuffer_;}
+
+GLuint SslrInfo::mrtProgram()
+	{return mrtProgram_;}
+
+GLuint SslrInfo::drawBuffersProgram()
+	{return drawBuffersProgram_;}
+
+GLuint SslrInfo::colourBuffer()
+	{return colour_;}
+
+GLuint SslrInfo::normalBuffer()
+	{return normal_;}
+
+GLuint SslrInfo::reflectionBuffer()
+	{return reflection_;}
+
+GLuint SslrInfo::depthBuffer()
+	{return depthBuffer_;}
+
+GLuint SslrInfo::quadVAO()
+	{return quadVAO_;}
+
 Graphics::~Graphics()
 	{}
+
+void SslrInfo::readResultsDebug()
+{
+	unsigned char pixelBuffer[windowWidth_ * windowHeight_ * 3];
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_); CHECK_GL_ERRORS
+	glReadBuffer(GL_COLOR_ATTACHMENT0); CHECK_GL_ERRORS
+	glReadPixels(0, 0, windowWidth_, windowHeight_, GL_RGB, GL_UNSIGNED_BYTE,
+		pixelBuffer); CHECK_GL_ERRORS
+	
+	struct jpeg_compress_struct compress;
+	struct jpeg_error_mgr manager;
+
+	compress.err = jpeg_std_error(&manager);
+	jpeg_create_compress(&compress);
+	
+	char number[256];
+	sprintf(number, "%d", pictureNumberCounter_);
+	FILE* descriptor = fopen((std::string("Buffer_snapshot_") +
+		number).data(), "w");
+	jpeg_stdio_dest(&compress, descriptor);
+	compress.image_width = windowWidth_;
+	compress.image_height = windowHeight_;
+	compress.input_components = 3;
+	compress.in_color_space = JCS_RGB;
+
+	jpeg_set_defaults(&compress);
+	jpeg_set_quality(&compress, 90, true);
+	jpeg_start_compress(&compress, TRUE);
+
+	JSAMPROW row_pointer[1];
+	int row_stride = compress.image_width * 3;
+
+	while (compress.next_scanline < compress.image_height)
+	{
+		row_pointer[0] = (JSAMPLE*) (pixelBuffer + compress.next_scanline *
+			row_stride);
+		jpeg_write_scanlines(&compress, row_pointer, 1);
+	}
+	jpeg_finish_compress(&compress);
+	jpeg_destroy_compress(&compress);
+
+	pictureNumberCounter_++;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 void Graphics::init(int windowWidth, int windowHeight)
 {
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
+
+	sslr_.setWindowSize(windowWidth, windowHeight);
 
 	GraphicalPointer = this;
 
@@ -117,9 +256,11 @@ void Graphics::createMap(const aiScene* scene)
 	scene_ = scene;
 
 	compileShaders();
-//	sslr_.compileShaders();
+	sslr_.compileShaders();
 
-//	sslr_.prepareBuffers();
+	sslr_.prepareBuffers();
+
+	sslr_.prepareQuad();
 	
 	std::cout << "Setting camera... " << std::flush;
 	createCamera();
@@ -278,6 +419,11 @@ bool Graphics::loadTexture(const char* path)
 			std::string("is of a different size than others! This is "
 						"unacceptable!"));
 	rawTextures_.push_back(image);
+
+	#ifdef GRAPHICS_M_DEBUG_SUPER
+	std::cout << "Loaded texture " << path << std::endl;
+	#endif
+
 	return true;
 }
 
@@ -302,8 +448,8 @@ void Graphics::flushTextures()
 	glBindTexture(GL_TEXTURE_2D_ARRAY, textures_); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D_ARRAY,
 		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); CHECK_GL_ERRORS
-	glTexParameteri(GL_TEXTURE_2D_ARRAY,
-		GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR); CHECK_GL_ERRORS
+//	glTexParameteri(GL_TEXTURE_2D_ARRAY,
+//		GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR); CHECK_GL_ERRORS
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 4, GL_RGBA8, textureImageWidth_,
 		textureImageHeight_, texturesCount_ + opacityTexCount_); CHECK_GL_ERRORS
 
@@ -454,6 +600,117 @@ void Graphics::drawSponza()
 	glUseProgram(0);
 }
 
+void Graphics::drawPrimaryTextures()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, sslr_.frameBuffer()); CHECK_GL_ERRORS
+	GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
+		GL_COLOR_ATTACHMENT2};
+	glDrawBuffers(3, buffers); CHECK_GL_ERRORS
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
+
+	glViewport(0, 0, windowWidth_, windowHeight_);
+
+	updateFPS();
+	GLint cameraLocation =
+		glGetUniformLocation(sslr_.mrtProgram(), "camera"); CHECK_GL_ERRORS
+	GLint materialIndexLocation =
+		glGetUniformLocation(sslr_.mrtProgram(), "material"); CHECK_GL_ERRORS
+	GLint cameraPosLoc =
+		glGetUniformLocation(sslr_.mrtProgram(), "cameraPosition");
+			CHECK_GL_ERRORS
+	GLint textureLocation =
+		glGetUniformLocation(sslr_.mrtProgram(), "textureArray"); CHECK_GL_ERRORS
+
+	glUseProgram(sslr_.mrtProgram()); CHECK_GL_ERRORS
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
+		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
+	GLfloat camPos[3];
+	camPos[0] = camera_.position.x;
+	camPos[1] = camera_.position.y;
+	camPos[2] = camera_.position.z;
+	glUniform3fv(cameraPosLoc, 1, camPos);
+
+	glUniform1i(textureLocation, textures_);
+
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
+	{
+		VAOs meshes = materials_[i];
+		GLuint materialIndex = i;
+		glUniform1ui(materialIndexLocation, materialIndex);
+		for (auto iter = meshes.begin();
+			 iter != meshes.end();
+			 iter++)
+		{
+			glBindVertexArray(iter->first); CHECK_GL_ERRORS
+			glDrawElements(GL_TRIANGLES, iter->second, GL_UNSIGNED_INT, 0);
+				CHECK_GL_ERRORS
+			glBindVertexArray(0); CHECK_GL_ERRORS
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(0);
+}
+
+void Graphics::drawFinalImage()
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
+	glUseProgram(sslr_.drawBuffersProgram()); CHECK_GL_ERRORS
+	
+	GLint colourLocation = glGetUniformLocation(
+		sslr_.drawBuffersProgram(), "colour"); CHECK_GL_ERRORS
+	GLint normalLocation = glGetUniformLocation(
+		sslr_.drawBuffersProgram(), "normal"); CHECK_GL_ERRORS
+	GLint reflectionLocation = glGetUniformLocation(
+		sslr_.drawBuffersProgram(), "reflection"); CHECK_GL_ERRORS
+	GLint depthLocation = glGetUniformLocation(
+		sslr_.drawBuffersProgram(), "depth"); CHECK_GL_ERRORS
+
+	glUniform1i(colourLocation, 0); CHECK_GL_ERRORS
+	glUniform1i(normalLocation, 1); CHECK_GL_ERRORS
+	glUniform1i(reflectionLocation, 2); CHECK_GL_ERRORS
+	glUniform1i(depthLocation, 3); CHECK_GL_ERRORS
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, sslr_.colourBuffer());
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, sslr_.normalBuffer());
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, sslr_.reflectionBuffer());
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, sslr_.depthBuffer());
+
+	glBindVertexArray(sslr_.quadVAO()); CHECK_GL_ERRORS
+	glDrawArrays(GL_TRIANGLES, 0, 6); CHECK_GL_ERRORS
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+/*
+	GLint one;
+	glGetIntegerv(0x9145, &one);
+	std::cout << (int) one << std::endl;
+*/
+}
+
+void openGLFunctions::sslrDisplay()
+{
+	GraphicalPointer->sslrDisplay();
+}
+
+void Graphics::sslrDisplay()
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+
+	drawPrimaryTextures();
+
+//	sslr_.readResultsDebug();
+
+	drawFinalImage();
+
+	glutSwapBuffers();
+}
+
 void openGLFunctions::display()
 {
 	GraphicalPointer->display();
@@ -537,7 +794,12 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	else if (key == (char)19)
 		camera_.goBack(1.0);
 	else if (key == 'O')
-		sslr_.flip();
+	{
+		if (sslr_.flip())
+			glutDisplayFunc(openGLFunctions::sslrDisplay);
+		else
+			glutDisplayFunc(openGLFunctions::display);
+	}
 }
 
 void openGLFunctions::special(int key, int x, int y)
@@ -587,6 +849,11 @@ void Graphics::reshape(GLint newWidth, GLint newHeight)
 	glViewport(0, 0, newWidth, newHeight);
 	windowWidth_ = newWidth;
 	windowHeight_ = newHeight;
+
+	std::cout << "Window reshaped to " << windowWidth_ << 'x' <<
+		windowHeight_ << std::endl;
+
+	sslr_.setWindowSize(newWidth, newHeight);
 
 	camera_.screenRatio = static_cast<float>(windowWidth_) / windowHeight_;
 }

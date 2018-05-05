@@ -31,6 +31,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 find_package(GLEW REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(JPEG REQUIRED)
 
 include_directories(${INCLUDE_ROOT} 
 					"${ASSIMP_ROOT}/include"
@@ -41,6 +42,7 @@ include_directories(${INCLUDE_ROOT}
 					${GLEW_INCLUDE_DIRS}
 					${GLUT_INCLUDE_DIR}
 					${OPENGL_INCLUDE_DIR}
+					${JPEG_INCLUDE_DIR}
 					)
 
 target_link_libraries(${PROJECT_NAME} "${ASSIMP_ROOT}/libassimp.so")
@@ -49,3 +51,4 @@ target_link_libraries(${PROJECT_NAME} ${SOIL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${GLUT_glut_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${JPEG_LIBRARIES})

@@ -23,6 +23,14 @@ Utility.h
 ../include/Utility.h
 SOIL.h
 ../include/SOIL.h
+jpeglib.h
+../include/jpeglib.h
+sys/types.h
+-
+sys/stat.h
+-
+fcntl.h
+-
 
 ../include/PointerGraphics.h
 
