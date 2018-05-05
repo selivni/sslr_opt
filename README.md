@@ -2,4 +2,4 @@
 
 An optimized imlementation of the SSLR effect
 
-Only SSLR here, no optimizations
+Only SSLR in this branch, no optimizations
