@@ -138,6 +138,7 @@ private:
 //	void updateLights();
 //	void passLights(GLuint);
 
+	bool fpsEnabled_;
 	void updateFPS();
 	
 //	void drawLights();

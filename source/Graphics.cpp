@@ -218,6 +218,7 @@ void Graphics::init(int windowWidth, int windowHeight)
 {
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
+	fpsEnabled_ = false;
 
 	sslr_.setWindowSize(windowWidth, windowHeight);
 
@@ -260,6 +261,7 @@ void Graphics::init(int windowWidth, int windowHeight)
 	glewExperimental = true; CHECK_GL_ERRORS
 	glewInit();
 	glGetError();
+
 	std::cout << "success" << std::endl;
 }
 
@@ -563,10 +565,13 @@ void Graphics::createModel()
 
 void Graphics::updateFPS()
 {
-	int currentTime = glutGet(GLUT_ELAPSED_TIME);
-	std::cout << '\r'
-		<< "FPS: " << 1000 / (currentTime - lastTime_) << "      ";
-	lastTime_ = currentTime;
+	if (fpsEnabled_)
+	{
+		int currentTime = glutGet(GLUT_ELAPSED_TIME);
+		std::cout << '\r'
+			<< "FPS: " << 1000 / (currentTime - lastTime_) << "      ";
+		lastTime_ = currentTime;
+	}
 }
 
 void Graphics::drawSponza()
@@ -842,6 +847,14 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 			glutDisplayFunc(openGLFunctions::sslrDisplay);
 		else
 			glutDisplayFunc(openGLFunctions::display);
+	}
+	else if (key == 'f' || key == 'F')
+		fpsEnabled_ = !fpsEnabled_;
+	else if (key == 'p' || key == 'P')
+	{
+		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
+				  << camera_.position.y << ' '
+				  << camera_.position.z << std::endl;
 	}
 }
 

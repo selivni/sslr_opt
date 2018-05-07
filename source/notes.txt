@@ -1,0 +1,30 @@
+Precision value for high quality far-away(2600) reflection = 0.00005
+Precision calue for high quality medium distance(1300) reflection = 0.0001
+Precision value for high quality close-by reflection(100?) = 0.001
+
+For closer objects: smaller alpha (but bigger min for iterations), lesser precision (so even bigger min for iterations)
+For farther objects: bigger alpha (so lesser minimum for iterations), bigger precision (even lesser min for iterations)
+length of this thing is about 2600
+
+
+something like a1*x^3 + a2*x^2 + a3*x^1 + a4 = precision, where:
+
+a1 = -0.002955289940828
+a2 = 0.118214443786982
+a3 = -1.114259153846153
+a4 = 1
+
+
+Change of plan. Fuck the precision. We will blur the fuck out if the furthest objects anyway. 
+
+a2 * x^2 + a1 * x^1 + a0 * 1 = precision
+a2 = 0.02299423076
+a1 = 0.32199423076
+a0 = 0.3
+
+counted by points (x,p): (13,0.0001), (1, 0.001), (0, 0.3)
+So if the distance turns out to be further away than 1300 i stop giving fucks and keep precision at 0.0001, otherwise i count this function
+
+What is left is to count how to determine minimal amount of iterations (probably won't need one on stage 2 because I will have big alpha already)
+
+Also don't forget to make smaller steps on promary bufferization or however should i call it
