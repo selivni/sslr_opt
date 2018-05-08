@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_FLAGS =  -Wall -g -std=c++11  
 
-CXX_DEFINES = -DGRAPH_OBJ=\"/home/mark/programming/diploma/models/\" -DMODEL_PATH=\"/home/mark/programming/diploma/models/sponza\" -DPROJECT_NAME=\"sslr_opt\" -DSPONZA_MTL=\"/home/mark/programming/diploma/models/sponza/sponza.mtl\" -DSPONZA_OBJ=\"/home/mark/programming/diploma/models/sponza/sponza.obj\" -DWINDOWHEIGHT_DEFAULT=600 -DWINDOWWIDTH_DEFAULT=800
+CXX_DEFINES = -DGRAPH_OBJ=\"/home/mark/programming/pre_diploma/sslr_opt/models/\" -DMODEL_PATH=\"/home/mark/programming/pre_diploma/sslr_opt/models/sponza\" -DPROJECT_NAME=\"sslr_opt\" -DSPONZA_MTL=\"/home/mark/programming/pre_diploma/sslr_opt/models/sponza/sponza.mtl\" -DSPONZA_OBJ=\"/home/mark/programming/pre_diploma/sslr_opt/models/sponza/sponza.obj\" -DWINDOWHEIGHT_DEFAULT=600 -DWINDOWWIDTH_DEFAULT=800
 
-CXX_INCLUDES = -I/home/mark/programming/diploma/include -I/home/mark/programming/diploma/shared/assimp/include -I/home/mark/programming/diploma/lib/Utility/include -I/home/mark/programming/diploma/lib/Utility/include/GL -I/home/mark/programming/diploma/lib/Utility/include/VM -I/home/mark/programming/diploma/lib/SOIL/src 
+CXX_INCLUDES = -I/home/mark/programming/pre_diploma/sslr_opt/include -I/home/mark/programming/pre_diploma/sslr_opt/shared/assimp/include -I/home/mark/programming/pre_diploma/sslr_opt/lib/Utility/include -I/home/mark/programming/pre_diploma/sslr_opt/lib/Utility/include/GL -I/home/mark/programming/pre_diploma/sslr_opt/lib/Utility/include/VM -I/home/mark/programming/pre_diploma/sslr_opt/lib/SOIL/src 
 

@@ -681,7 +681,7 @@ void Graphics::drawFinalImage()
 		glGetUniformLocation(sslr_.drawBuffersProgram(), "projection"); CHECK_GL_ERRORS
 
 	GLint cameraPosLoc =
-		glGetUniformLocation(sslr_.mrtProgram(), "cameraPosition");
+		glGetUniformLocation(sslr_.drawBuffersProgram(), "cameraPosition");
 			CHECK_GL_ERRORS
 
 	GLint colourLocation = glGetUniformLocation(

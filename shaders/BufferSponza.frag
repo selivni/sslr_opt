@@ -66,7 +66,7 @@ void main()
 	}
 	st = vec2((uv.x + 1) / 2, (uv.y + 1) / 2);
 	vec3 startingPoint = getWSCoord(st, texture(depth, st).r);
-	vec4 camPos = vec4(cameraPosition, 1);
+	vec4 camPos = model * vec4(cameraPosition, 1);
 	camPos /= camPos.w;
 	vec3 strikeVector = normalize(startingPoint - camPos.xyz);
 	vec3 direction = normalize(reflect(strikeVector, normal_.xyz));

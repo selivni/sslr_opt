@@ -384,21 +384,21 @@ vector3.h
 cmath
 -
 
-/home/mark/programming/diploma/source/Graphics.cpp
+/home/mark/programming/pre_diploma/sslr_opt/source/Graphics.cpp
 Graphics.h
-/home/mark/programming/diploma/source/Graphics.h
+/home/mark/programming/pre_diploma/sslr_opt/source/Graphics.h
 PointerGraphics.h
-/home/mark/programming/diploma/source/PointerGraphics.h
+/home/mark/programming/pre_diploma/sslr_opt/source/PointerGraphics.h
 
-/home/mark/programming/diploma/source/SceneLoader.cpp
+/home/mark/programming/pre_diploma/sslr_opt/source/SceneLoader.cpp
 SceneLoader.h
-/home/mark/programming/diploma/source/SceneLoader.h
+/home/mark/programming/pre_diploma/sslr_opt/source/SceneLoader.h
 
-/home/mark/programming/diploma/source/main.cpp
+/home/mark/programming/pre_diploma/sslr_opt/source/main.cpp
 iostream
 -
 SceneLoader.h
-/home/mark/programming/diploma/source/SceneLoader.h
+/home/mark/programming/pre_diploma/sslr_opt/source/SceneLoader.h
 Graphics.h
-/home/mark/programming/diploma/source/Graphics.h
+/home/mark/programming/pre_diploma/sslr_opt/source/Graphics.h
 

@@ -43,10 +43,10 @@ RM = /usr/local/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/mark/programming/diploma
+CMAKE_SOURCE_DIR = /home/mark/programming/pre_diploma/sslr_opt
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/mark/programming/diploma/build
+CMAKE_BINARY_DIR = /home/mark/programming/pre_diploma/sslr_opt/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/sslr_opt.dir/depend.make
@@ -59,16 +59,16 @@ include CMakeFiles/sslr_opt.dir/flags.make
 
 CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o: CMakeFiles/sslr_opt.dir/flags.make
 CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o: ../source/Graphics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mark/programming/diploma/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o -c /home/mark/programming/diploma/source/Graphics.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mark/programming/pre_diploma/sslr_opt/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o -c /home/mark/programming/pre_diploma/sslr_opt/source/Graphics.cpp
 
 CMakeFiles/sslr_opt.dir/source/Graphics.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/sslr_opt.dir/source/Graphics.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mark/programming/diploma/source/Graphics.cpp > CMakeFiles/sslr_opt.dir/source/Graphics.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mark/programming/pre_diploma/sslr_opt/source/Graphics.cpp > CMakeFiles/sslr_opt.dir/source/Graphics.cpp.i
 
 CMakeFiles/sslr_opt.dir/source/Graphics.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/sslr_opt.dir/source/Graphics.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mark/programming/diploma/source/Graphics.cpp -o CMakeFiles/sslr_opt.dir/source/Graphics.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mark/programming/pre_diploma/sslr_opt/source/Graphics.cpp -o CMakeFiles/sslr_opt.dir/source/Graphics.cpp.s
 
 CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o.requires:
 
@@ -83,16 +83,16 @@ CMakeFiles/sslr_opt.dir/source/Graphics.cpp.o.provides.build: CMakeFiles/sslr_op
 
 CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o: CMakeFiles/sslr_opt.dir/flags.make
 CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o: ../source/SceneLoader.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mark/programming/diploma/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o -c /home/mark/programming/diploma/source/SceneLoader.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mark/programming/pre_diploma/sslr_opt/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o -c /home/mark/programming/pre_diploma/sslr_opt/source/SceneLoader.cpp
 
 CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mark/programming/diploma/source/SceneLoader.cpp > CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mark/programming/pre_diploma/sslr_opt/source/SceneLoader.cpp > CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.i
 
 CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mark/programming/diploma/source/SceneLoader.cpp -o CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mark/programming/pre_diploma/sslr_opt/source/SceneLoader.cpp -o CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.s
 
 CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o.requires:
 
@@ -107,16 +107,16 @@ CMakeFiles/sslr_opt.dir/source/SceneLoader.cpp.o.provides.build: CMakeFiles/sslr
 
 CMakeFiles/sslr_opt.dir/source/main.cpp.o: CMakeFiles/sslr_opt.dir/flags.make
 CMakeFiles/sslr_opt.dir/source/main.cpp.o: ../source/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mark/programming/diploma/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/sslr_opt.dir/source/main.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sslr_opt.dir/source/main.cpp.o -c /home/mark/programming/diploma/source/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/mark/programming/pre_diploma/sslr_opt/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/sslr_opt.dir/source/main.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/sslr_opt.dir/source/main.cpp.o -c /home/mark/programming/pre_diploma/sslr_opt/source/main.cpp
 
 CMakeFiles/sslr_opt.dir/source/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/sslr_opt.dir/source/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mark/programming/diploma/source/main.cpp > CMakeFiles/sslr_opt.dir/source/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mark/programming/pre_diploma/sslr_opt/source/main.cpp > CMakeFiles/sslr_opt.dir/source/main.cpp.i
 
 CMakeFiles/sslr_opt.dir/source/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/sslr_opt.dir/source/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mark/programming/diploma/source/main.cpp -o CMakeFiles/sslr_opt.dir/source/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mark/programming/pre_diploma/sslr_opt/source/main.cpp -o CMakeFiles/sslr_opt.dir/source/main.cpp.s
 
 CMakeFiles/sslr_opt.dir/source/main.cpp.o.requires:
 
@@ -163,7 +163,7 @@ sslr_opt: /usr/lib/x86_64-linux-gnu/libGLU.so
 sslr_opt: /usr/lib/x86_64-linux-gnu/libGL.so
 sslr_opt: /usr/lib/x86_64-linux-gnu/libjpeg.so
 sslr_opt: CMakeFiles/sslr_opt.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/mark/programming/diploma/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable sslr_opt"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/mark/programming/pre_diploma/sslr_opt/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable sslr_opt"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/sslr_opt.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -182,6 +182,6 @@ CMakeFiles/sslr_opt.dir/clean:
 .PHONY : CMakeFiles/sslr_opt.dir/clean
 
 CMakeFiles/sslr_opt.dir/depend:
-	cd /home/mark/programming/diploma/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mark/programming/diploma /home/mark/programming/diploma /home/mark/programming/diploma/build /home/mark/programming/diploma/build /home/mark/programming/diploma/build/CMakeFiles/sslr_opt.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/mark/programming/pre_diploma/sslr_opt/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mark/programming/pre_diploma/sslr_opt /home/mark/programming/pre_diploma/sslr_opt /home/mark/programming/pre_diploma/sslr_opt/build /home/mark/programming/pre_diploma/sslr_opt/build /home/mark/programming/pre_diploma/sslr_opt/build/CMakeFiles/sslr_opt.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/sslr_opt.dir/depend
 
