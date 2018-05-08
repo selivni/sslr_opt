@@ -36,7 +36,7 @@ out vec4 result;
 
 void main()
 {
-	const float iterationLimit = 50;
+	const float iterationLimit = 10;
 	const float pointPrecision = 0.0005;
 
 	const float lowestPrecision = 0.001;
@@ -80,9 +80,9 @@ void main()
 			break;
 
 		realDepth = texture(depth, prCurrPoint.xy).r;
-		alpha = 0.5 * distance(currentPoint, getWorldSpace(prCurrPoint.xy, realDepth));
-//		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
-//			alpha = -alpha;
+		alpha = distance(currentPoint, getWorldSpace(prCurrPoint.xy, realDepth));
+		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
+			alpha = -alpha;
 		iter += 1.0;
 	} while ((abs(realDepth - prCurrPoint.z) > pointPrecision ||
 		iter < 5) && iter < iterationLimit);

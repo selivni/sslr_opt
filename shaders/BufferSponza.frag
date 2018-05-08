@@ -41,7 +41,7 @@ void main()
 	const float highestPrecision = 0.0001;
 
 	float const1 = 0.5, const2 = 0.5;
-	float iterationLimit = 20.0;
+	float iterationLimit = 5.0;
 	float pointPrecision;
 
 	vec2 st = vec2((uv.x + 1) / 2, (uv.y + 1) / 2);
