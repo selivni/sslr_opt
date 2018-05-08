@@ -41,6 +41,7 @@ public:
 	SslrInfo();
 
 	void setWindowSize(int, int);
+	void setRecommendationsTexDivider(int);
 
 	bool flip();
 	void compileShaders();
@@ -52,8 +53,10 @@ public:
 	void readResultsDebug();
 
 	bool enabled();
-	GLuint frameBuffer();
+	GLuint mrtBuffer();
+	GLuint lrBuffer();
 	GLuint mrtProgram();
+	GLuint lrProgram();
 	GLuint drawBuffersProgram();
 
 	GLuint quadVAO();
@@ -63,25 +66,32 @@ public:
 	GLuint reflectionBuffer();
 	GLuint depthBuffer();
 
+	GLuint recommendationsBuffer();
+
 
 private:
 	bool enabled_;
 	GLuint mrtProgram_;
+	GLuint lrProgram_;
 	GLuint drawBuffersProgram_;
 
 	GLuint quadVAO_;
 	GLuint quadVBO_;
 
-	GLuint frameBuffer_;
+	GLuint mrtFbo_;
+	GLuint lrFbo_;
 
 	GLuint colour_;
 	GLuint normal_;
 	GLuint reflection_;
-
 	GLuint depthBuffer_;
+
+	GLuint recommendations_;
 
 	int windowWidth_;
 	int windowHeight_;
+
+	int recTexDiv_;
 
 	void setupBufferTexture(GLuint texture);
 	static const GLfloat simpleQuad[];
@@ -106,6 +116,7 @@ public:
 	~Graphics();
 private:
 	const aiScene* scene_;
+	static const unsigned int RecTexDivValue;
 	
 	int windowWidth_;
 	int windowHeight_;
@@ -159,6 +170,7 @@ private:
 
 	SslrInfo sslr_;
 	void drawPrimaryTextures();
+	void drawRecommendations();
 	void drawFinalImage();
 
 };

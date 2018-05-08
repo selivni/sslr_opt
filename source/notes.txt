@@ -19,7 +19,7 @@ Change of plan. Fuck the precision. We will blur the fuck out if the furthest ob
 
 a2 * x^2 + a1 * x^1 + a0 * 1 = precision
 a2 = 0.02299423076
-a1 = 0.32199423076
+a1 = -0.32199423076
 a0 = 0.3
 
 counted by points (x,p): (13,0.0001), (1, 0.001), (0, 0.3)

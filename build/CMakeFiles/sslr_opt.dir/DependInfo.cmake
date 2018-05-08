@@ -17,8 +17,8 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
   "PROJECT_NAME=\"sslr_opt\""
   "SPONZA_MTL=\"/home/mark/programming/diploma/models/sponza/sponza.mtl\""
   "SPONZA_OBJ=\"/home/mark/programming/diploma/models/sponza/sponza.obj\""
-  "WINDOWHEIGHT_DEFAULT=600"
-  "WINDOWWIDTH_DEFAULT=800"
+  "WINDOWHEIGHT_DEFAULT=760"
+  "WINDOWWIDTH_DEFAULT=1280"
   )
 
 # The include file search paths:
