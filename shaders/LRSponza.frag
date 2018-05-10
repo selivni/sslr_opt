@@ -93,8 +93,6 @@ void main()
 			prCurrPoint.x = 1.1;
 			break;
 		}
-//		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
-//			alpha = -alpha;
 		iter += 1.0;
 	} while ((abs(realDepth - prCurrPoint.z) > pointPrecision ||
 		iter < 5) && iter < iterationLimit);
