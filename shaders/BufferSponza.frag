@@ -50,7 +50,7 @@ vec3 getUV(vec3 point)
 void main()
 {
 	float const1 = 0.5, const2 = 0.5;
-
+	float iter = 30;
 	vec2 st = vec2((uv.x + 1) / 2, (uv.y + 1) / 2);
 	vec4 normal_ = texture(normal, st);
 	vec4 reflection_ = texture(reflection, st);
@@ -72,7 +72,6 @@ void main()
 	vec3 direction = normalize(reflect(strikeVector, normal_.xyz));
 	float alpha = 50.0;
 	vec3 currentPoint = startingPoint;
-//	vec2 currST;
 	vec3 prCurrPoint;
 	float realDepth;
 	float iter = 0.0;
@@ -80,14 +79,10 @@ void main()
 	{
 		currentPoint = startingPoint + direction * alpha;
 		prCurrPoint = getUV(currentPoint);
-//		currST = vec2((prCurrPoint.x + 1) / 2, (prCurrPoint.y + 1) / 2);
-//		prCurrPoint /= prCurrPoint.w;
 		realDepth = texture(depth, prCurrPoint.xy).r;
 		alpha = distance(startingPoint, getWSCoord(prCurrPoint.xy, realDepth));
-//		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
-//			alpha = -alpha;
 		iter += 1.0;
-	} while (/*abs(realDepth - prCurrPoint.z) > 0.01 && */iter < 30.0);
+	} while (iter < maxIter);
 	if (abs(prCurrPoint.x) > 1 || abs(prCurrPoint.y) > 1)
 	{
 		const1 = 1;
