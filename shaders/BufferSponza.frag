@@ -40,10 +40,8 @@ vec3 getUV(vec3 point)
 {
 	vec4 result = vec4(point, 1);
 	result = projection * view * result;
-//	result /= result.w;
 	result.x = (result.x/result.w + 1) / 2;
 	result.y = (result.y/result.w + 1) / 2;
-//	result.xy = vec2(0.5, 0.5) + vec2(0.5, -0.5) * result.xy / result.w;
 	return vec3(result.xy, result.z/result.w);
 }
 
