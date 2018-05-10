@@ -11,7 +11,6 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-uniform mat4 camera;
 uniform vec3 cameraPosition;
 
 /*Obtains world-space coordinates*/
@@ -42,13 +41,18 @@ void main()
 	const float lowestPrecision = 0.001;
 	const float highestPrecision = 0.0001;
 
-	const float a2 = 0.02299423076;
-	const float a1 = -0.32199423076;
-	const float a0 = 0.3;
+//	const float lowestPrecision = 0.001;
+//	const float highestPrecision = 0.0001;
+
+	const float a3 = -4.87013E-7;
+	const float a2 = 1.85714E-5;
+	const float a1 = -2.45877E-4;
+	const float a0 = 1.22779E-3;
 
 	float alpha = 50.0;
 	const float maximalAlpha = 50.0;
 	float recommendedPrecision = 0.0005;
+	float precisionMultiplier = 500.0;
 
 	vec2 st = vec2((uv.x + 1) / 2, (uv.y + 1) / 2);
 	vec4 colour_ = texture(colour, st);
@@ -81,8 +85,15 @@ void main()
 
 		realDepth = texture(depth, prCurrPoint.xy).r;
 		alpha = distance(currentPoint, getWorldSpace(prCurrPoint.xy, realDepth));
-		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
+		if (alpha > 0.0 && realDepth - prCurrPoint.z < 0.0)
 			alpha = -alpha;
+		if (alpha < 0.0 && realDepth - prCurrPoint.z > 0.0)
+		{
+			prCurrPoint.x = 1.1;
+			break;
+		}
+//		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
+//			alpha = -alpha;
 		iter += 1.0;
 	} while ((abs(realDepth - prCurrPoint.z) > pointPrecision ||
 		iter < 5) && iter < iterationLimit);
@@ -90,18 +101,22 @@ void main()
 	if (abs(prCurrPoint.x) > 1.01 || abs(prCurrPoint.y) > 1.01)
 	{
 		result = vec4(0.5 * log(length(currentPoint - startingPoint)) /
-			maximalAlpha, lowestPrecision, 0, 0);
+			maximalAlpha, lowestPrecision * precisionMultiplier, 0, 0);
 	} else
 	{
-		float viewDistance = length(camPos.xyz - currentPoint) / 100;
+		vec4 viewVector = inverse(model) * vec4(camPos.xyz - currentPoint, 1);
+		viewVector /= viewVector.w;
+		float viewDistance = length(viewVector.xyz) / 100;
+		float viewDistance2 = viewDistance * viewDistance;
+		float viewDistance3 = viewDistance2 * viewDistance;
 		if (viewDistance >= 13)
 			recommendedPrecision = highestPrecision;
 		else if (viewDistance <= 1)
 			recommendedPrecision = lowestPrecision;
 		else
-			recommendedPrecision = 
-				a2 * viewDistance * viewDistance + a1 * viewDistance + a0;
+			recommendedPrecision = a3 * viewDistance3 + a2 * viewDistance2
+				+ a1 * viewDistance + a0;
 		result = vec4(log(length(currentPoint - startingPoint)) / 
-			maximalAlpha, recommendedPrecision, 0, 0);
+			maximalAlpha, recommendedPrecision * precisionMultiplier, 0, 0);
 	}
 }
