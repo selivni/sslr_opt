@@ -241,6 +241,7 @@ void Graphics::init(int windowWidth, int windowHeight)
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
 	fpsEnabled_ = false;
+	timeCaptureEnabled_ = false;
 
 	sslr_.setWindowSize(windowWidth, windowHeight);
 	sslr_.setRecommendationsTexDivider(RecTexDivValue);
@@ -597,6 +598,29 @@ void Graphics::updateFPS()
 	}
 }
 
+void Graphics::timeCaptureBegin()
+{
+	if (timeCaptureEnabled_)
+		lastTime_ = glutGet(GLUT_ELAPSED_TIME);
+}
+
+void Graphics::timeCaptureEnd()
+{
+	if (timeCaptureEnabled_)
+	{
+		int currentTime = glutGet(GLUT_ELAPSED_TIME);
+		accumulatedTime_ += (currentTime - lastTime_);
+		accumulatedTimeDivider_++;
+		if (accumulatedTime_ > 200)
+		{
+			std::cout << "Average SSLR time: " <<
+				static_cast<float>(accumulatedTime_) / accumulatedTimeDivider_
+				<< std::endl;
+			accumulatedTime_ = accumulatedTimeDivider_ = 0;
+		}
+	}
+}
+
 void Graphics::drawSponza()
 {
 	updateFPS();
@@ -693,6 +717,8 @@ void Graphics::drawPrimaryTextures()
 
 void Graphics::drawRecommendations()
 {
+	timeCaptureBegin();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, sslr_.lrBuffer());
 	GLenum buffers[] = {GL_COLOR_ATTACHMENT0};
 	glDrawBuffers(1, buffers); CHECK_GL_ERRORS
@@ -826,14 +852,19 @@ void Graphics::drawFinalImage()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, sslr_.colourBuffer());
+	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, sslr_.normalBuffer());
+	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, sslr_.reflectionBuffer());
+	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, sslr_.depthBuffer());
+	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, sslr_.recommendationsBuffer());
+	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
 		GL_TEXTURE_MIN_FILTER, GL_LINEAR); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
@@ -844,6 +875,8 @@ void Graphics::drawFinalImage()
 
 	glBindVertexArray(0);
 	glUseProgram(0);
+
+	timeCaptureEnd();
 /*
 	GLint one;
 	glGetIntegerv(0x9145, &one);
@@ -964,12 +997,24 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 			glutDisplayFunc(openGLFunctions::display);
 	}
 	else if (key == 'f' || key == 'F')
-		fpsEnabled_ = !fpsEnabled_;
+	{
+		if (!timeCaptureEnabled_)
+			fpsEnabled_ = !fpsEnabled_;
+	}
 	else if (key == 'p' || key == 'P')
 	{
 		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
 				  << camera_.position.y << ' '
 				  << camera_.position.z << std::endl;
+	}
+	else if (key == 't' || key == 'T')
+	{
+		if ((timeCaptureEnabled_ = !timeCaptureEnabled_))
+		{
+			fpsEnabled_ = false;
+			accumulatedTime_ = 0;
+			accumulatedTimeDivider_ = 0;
+		}
 	}
 }
 

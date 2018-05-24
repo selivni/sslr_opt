@@ -142,16 +142,21 @@ private:
 	GLuint modelShader_;
 //	GLuint sphereShader_;
 
-	int lastTime_;
-	unsigned int frameCounter_;
 
 //	LightsArray lights_;
 //	void updateLights();
 //	void passLights(GLuint);
 
 	bool fpsEnabled_;
+	int lastTime_;
 	void updateFPS();
 	
+	bool timeCaptureEnabled_;
+	int accumulatedTime_;
+	int accumulatedTimeDivider_;
+	void timeCaptureBegin();
+	void timeCaptureEnd();
+
 //	void drawLights();
 	void drawSponza();
 
