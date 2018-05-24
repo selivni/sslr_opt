@@ -93,14 +93,12 @@ void main()
 			prCurrPoint.x = 1.1;
 			break;
 		}
-//		if (alpha * (realDepth - prCurrPoint.z) < 0.0)
-//			alpha = -alpha;
 		iter += 1.0;
 	} while ((abs(realDepth - prCurrPoint.z) > pointPrecision ||
 		iter < 5) && iter < iterationLimit);
 
-	if (prCurrPoint.x > 1.01 || prCurrPoint.y > 1.01 ||
-		prCurrPoint.x < 0.01 || prCurrPoint.y < 0.01)
+	if (prCurrPoint.x > 1.0 || prCurrPoint.y > 1.0 ||
+		prCurrPoint.x < -0.0 || prCurrPoint.y < -0.0)
 	{
 		result = vec4(0.5 * log(length(currentPoint - startingPoint)) /
 			maximalAlpha, lowestPrecision * precisionMultiplier, 0, 0);
