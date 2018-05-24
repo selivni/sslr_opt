@@ -9,6 +9,58 @@ SslrInfo::SslrInfo(): enabled_(false), mrtProgram_(0), drawBuffersProgram_(0),
 	pictureNumberCounter_(0)
 	{}
 
+const int FPSHandler::timeLength_ = 1000;
+
+FPSHandler::FPSHandler()
+{
+	while (measurements_.size() != 0)
+		measurements_.pop();
+	sum_ = 0;
+	enabled_ = false;
+	lastTime_ = 0;
+}
+
+void FPSHandler::clear()
+{
+	while (measurements_.size() != 0)
+		measurements_.pop();
+	sum_ = 0;
+	lastTime_ = 0;
+}
+
+void FPSHandler::updateFPS()
+{
+	if (enabled_)
+	{
+		int currentTime = glutGet(GLUT_ELAPSED_TIME);
+		measurements_.push(currentTime - lastTime_);
+		sum_ += currentTime - lastTime_;
+		while (sum_ >= timeLength_)
+		{
+			sum_ -= measurements_.front();
+			measurements_.pop();
+		}
+		int result;
+		if (measurements_.empty() || sum_ == 0)
+			result = 1001;
+		else
+			result = sum_ / measurements_.size();
+		std::cout << '\n'
+			<< "FPS: " << 1000 / (result) << "      ";
+		lastTime_ = currentTime;
+	}
+}
+
+bool FPSHandler::flip()
+{
+	return enabled_ = !enabled_;
+}
+
+FPSHandler::operator bool()
+{
+	return enabled_;
+}
+
 void SslrInfo::compileShaders()
 {
 
@@ -240,7 +292,6 @@ void Graphics::init(int windowWidth, int windowHeight)
 {
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
-	fpsEnabled_ = false;
 	timeCaptureEnabled_ = false;
 
 	sslr_.setWindowSize(windowWidth, windowHeight);
@@ -587,17 +638,6 @@ void Graphics::createModel()
 	#endif
 }
 
-void Graphics::updateFPS()
-{
-	if (fpsEnabled_)
-	{
-		int currentTime = glutGet(GLUT_ELAPSED_TIME);
-		std::cout << '\r'
-			<< "FPS: " << 1000 / (currentTime - lastTime_) << "      ";
-		lastTime_ = currentTime;
-	}
-}
-
 void Graphics::timeCaptureBegin()
 {
 	if (timeCaptureEnabled_)
@@ -623,7 +663,7 @@ void Graphics::timeCaptureEnd()
 
 void Graphics::drawSponza()
 {
-	updateFPS();
+	fps_.updateFPS();
 	GLint cameraLocation =
 		glGetUniformLocation(modelShader_, "camera"); CHECK_GL_ERRORS
 	GLint materialIndexLocation =
@@ -674,7 +714,7 @@ void Graphics::drawPrimaryTextures()
 
 	glViewport(0, 0, windowWidth_, windowHeight_);
 
-	updateFPS();
+	fps_.updateFPS();
 	GLint cameraLocation =
 		glGetUniformLocation(sslr_.mrtProgram(), "camera"); CHECK_GL_ERRORS
 	GLint materialIndexLocation =
@@ -853,18 +893,22 @@ void Graphics::drawFinalImage()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, sslr_.colourBuffer());
 	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MIN_FILTER, GL_LINEAR); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MAG_FILTER, GL_LINEAR); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, sslr_.normalBuffer());
-	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
+//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, sslr_.reflectionBuffer());
-	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
+//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, sslr_.depthBuffer());
-	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
+//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, sslr_.recommendationsBuffer());
-	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
+//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
 		GL_TEXTURE_MIN_FILTER, GL_LINEAR); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
@@ -999,7 +1043,10 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	else if (key == 'f' || key == 'F')
 	{
 		if (!timeCaptureEnabled_)
-			fpsEnabled_ = !fpsEnabled_;
+		{
+			if (fps_.flip())
+				fps_.clear();
+		}
 	}
 	else if (key == 'p' || key == 'P')
 	{
@@ -1011,7 +1058,8 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	{
 		if ((timeCaptureEnabled_ = !timeCaptureEnabled_))
 		{
-			fpsEnabled_ = false;
+			if (fps_)
+				fps_.flip();
 			accumulatedTime_ = 0;
 			accumulatedTimeDivider_ = 0;
 		}

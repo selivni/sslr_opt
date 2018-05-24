@@ -3,6 +3,7 @@
 #include <iostream>
 #include <list>
 #include <cstring>
+#include <queue>
 
 #include "scene.h"
 #include "vector3.h"
@@ -33,6 +34,23 @@ struct TexturesInfo
 	int opacityIndex;//Can be -1
 	bool fake;//Only an ambient texture can be fake
 	TexturesInfo(int, int, bool);
+};
+
+class FPSHandler
+{
+public:
+	void updateFPS();
+	FPSHandler();
+	void clear();
+	bool flip();
+	operator bool();
+private:
+	static const int timeLength_;
+
+	std::queue<int> measurements_;
+	int sum_;
+	bool enabled_;
+	int lastTime_;
 };
 
 class SslrInfo
@@ -147,10 +165,9 @@ private:
 //	void updateLights();
 //	void passLights(GLuint);
 
-	bool fpsEnabled_;
-	int lastTime_;
-	void updateFPS();
+	FPSHandler fps_;
 	
+	int lastTime_;
 	bool timeCaptureEnabled_;
 	int accumulatedTime_;
 	int accumulatedTimeDivider_;

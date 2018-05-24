@@ -72,7 +72,7 @@ vec3 filterBlur(vec2 st, float strength)
 	newFil[0][0] = newFil[0][2] = newFil[2][0] = newFil[2][2] *= strength / 4;
 	newFil[0][1] = newFil[1][0] = newFil[1][2] = newFil[2][1] *= strength / 2;
 */
-	strength = pow(pow(strength, 3.0) / pow(200, 3.0), 1);
+	strength = pow(pow(strength, 3.0) / pow(100, 3.0), 1);
 	int i, j;
 	mat3 newFil;
 	float normSum = 0.0;

@@ -13,12 +13,14 @@ uniform mat4 projection;
 
 uniform vec3 cameraPosition;
 
+mat4 inverseModel = inverse(model);
+mat4 inverseProjectionView = inverse(projection * view);
+
 /*Obtains world-space coordinates*/
 vec3 getWorldSpace(vec2 uv_, float depth_)
 {
-	mat4 inverseViewProjection = inverse(projection * view);
 	vec4 position = vec4(uv_.x * 2.0 - 1.0, uv_.y * 2.0 - 1.0, depth_, 1);
-	position = inverseViewProjection * position;
+	position = inverseProjectionView * position;
 	position /= position.w;
 	return position.xyz;
 }
@@ -32,6 +34,18 @@ vec3 getUV(vec3 point)
 }
 
 out vec4 result;
+
+vec4 getViewVector(vec3 currentPoint, vec3 startingPoint)
+{
+	vec4 returnValue = inverseModel * vec4(currentPoint - startingPoint, 1.0);
+	returnValue /= returnValue.w;
+	return returnValue;
+}
+
+float blendValue(vec4 viewVector)
+{
+	return 4.0 / pow(length(viewVector.xyz), 0.54);
+}
 
 void main()
 {
@@ -79,7 +93,12 @@ void main()
 	{
 		currentPoint = currentPoint + direction * alpha;
 		prCurrPoint = getUV(currentPoint);
-
+		if (iter > 1.5)
+		{
+			vec4 viewVector = getViewVector(currentPoint, startingPoint);
+			if (blendValue(viewVector) > 1)
+				break;
+		}
 		if (abs(prCurrPoint.x) > 1.1 || abs(prCurrPoint.y) > 1.1)
 			break;
 
@@ -104,8 +123,7 @@ void main()
 			maximalAlpha, lowestPrecision * precisionMultiplier, 0, 0);
 	} else
 	{
-		vec4 viewVector = inverse(model) * vec4(camPos.xyz - currentPoint, 1);
-		viewVector /= viewVector.w;
+		vec4 viewVector = getViewVector(currentPoint, startingPoint);
 		float viewDistance = length(viewVector.xyz) / 100;
 		float viewDistance2 = viewDistance * viewDistance;
 		float viewDistance3 = viewDistance2 * viewDistance;
