@@ -248,6 +248,9 @@ void SslrInfo::compileShaders()
 
 	mrtProgram_ = GL::CompileShaderProgram("MRTSponza");
 		CHECK_GL_ERRORS
+
+	mrtLightProgram_ = GL::CompileShaderProgram("MRTSponzaWithLights");
+
 	drawBuffersProgram_ = GL::CompileShaderProgram("BufferSponza");
 		CHECK_GL_ERRORS
 	
@@ -396,6 +399,9 @@ GLuint SslrInfo::lrBuffer()
 
 GLuint SslrInfo::mrtProgram()
 	{return mrtProgram_;}
+
+GLuint SslrInfo::mrtLightProgram()
+	{return mrtLightProgram_;}
 
 GLuint SslrInfo::lrProgram()
 	{return lrProgram_;}
@@ -956,20 +962,26 @@ void Graphics::drawPrimaryTextures()
 	glDrawBuffers(3, buffers); CHECK_GL_ERRORS
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
 
+	GLuint shaderProgram;
+	if (lightsEnabled_)
+		shaderProgram = sslr_.mrtLightProgram();
+	else
+		shaderProgram = sslr_.mrtProgram();
+
 	glViewport(0, 0, windowWidth_, windowHeight_);
 
 	fps_.updateFPS();
 	GLint cameraLocation =
-		glGetUniformLocation(sslr_.mrtProgram(), "camera"); CHECK_GL_ERRORS
+		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
 	GLint materialIndexLocation =
-		glGetUniformLocation(sslr_.mrtProgram(), "material"); CHECK_GL_ERRORS
+		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
 	GLint cameraPosLoc =
-		glGetUniformLocation(sslr_.mrtProgram(), "cameraPosition");
+		glGetUniformLocation(shaderProgram, "cameraPosition");
 			CHECK_GL_ERRORS
 	GLint textureLocation =
-		glGetUniformLocation(sslr_.mrtProgram(), "textureArray"); CHECK_GL_ERRORS
+		glGetUniformLocation(shaderProgram, "textureArray"); CHECK_GL_ERRORS
 
-	glUseProgram(sslr_.mrtProgram()); CHECK_GL_ERRORS
+	glUseProgram(shaderProgram); CHECK_GL_ERRORS
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
 		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
 	GLfloat camPos[3];
@@ -978,7 +990,39 @@ void Graphics::drawPrimaryTextures()
 	camPos[2] = camera_.position.z;
 	glUniform3fv(cameraPosLoc, 1, camPos);
 
-	glUniform1i(textureLocation, textures_);
+	if (lightsEnabled_)
+	{
+		GLint moonDepthLocation =
+			glGetUniformLocation(shaderProgram, "moonLightDepth");
+		GLint moonCamLocation =
+			glGetUniformLocation(shaderProgram, "moonCam");
+		GLint lightDirLocation =
+			glGetUniformLocation(shaderProgram, "moonDir");
+
+		glUniformMatrix4fv(moonCamLocation, 1, GL_TRUE,
+			lights_.getMoonMatrix().data().data()); CHECK_GL_ERRORS
+		glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
+			camera_.getMatrix().data().data()); CHECK_GL_ERRORS
+
+		glUniform1i(textureLocation, 0); CHECK_GL_ERRORS
+		glUniform1i(moonDepthLocation, 1); CHECK_GL_ERRORS
+		
+		GLfloat values[3] =
+			{lightDirection_.x, lightDirection_.y, lightDirection_.z};
+		glUniform3fv(lightDirLocation, 1, values);
+
+		glActiveTexture(GL_TEXTURE0); CHECK_GL_ERRORS
+		glBindTexture(GL_TEXTURE_2D_ARRAY, textures_); CHECK_GL_ERRORS
+		glActiveTexture(GL_TEXTURE1); CHECK_GL_ERRORS
+		glBindTexture(GL_TEXTURE_2D, lights_.getShadowTexture()); CHECK_GL_ERRORS
+		glTexParameteri(GL_TEXTURE_2D,
+			GL_TEXTURE_MIN_FILTER, GL_LINEAR); CHECK_GL_ERRORS
+		glTexParameteri(GL_TEXTURE_2D,
+			GL_TEXTURE_MAG_FILTER, GL_LINEAR); CHECK_GL_ERRORS
+	} else
+	{
+		glUniform1i(textureLocation, textures_);
+	}
 
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{

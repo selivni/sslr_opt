@@ -113,6 +113,7 @@ public:
 	GLuint mrtBuffer();
 	GLuint lrBuffer();
 	GLuint mrtProgram();
+	GLuint mrtLightProgram();
 	GLuint lrProgram();
 	GLuint drawBuffersProgram();
 
@@ -129,6 +130,7 @@ public:
 private:
 	bool enabled_;
 	GLuint mrtProgram_;
+	GLuint mrtLightProgram_;
 	GLuint lrProgram_;
 	GLuint drawBuffersProgram_;
 
