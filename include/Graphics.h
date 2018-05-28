@@ -21,7 +21,7 @@ extern "C"
 #define GRAPHICS_M_DEBUG_SUPER
 #undef GRAPHICS_M_DEBUG_SUPER
 
-//GLuint - VAO, uint - mesh vertices count
+//GLuint - VAO, uint - mesh vertices count(not anymore I guess?)
 typedef std::pair<GLuint, unsigned int> MeshInfo;
 
 typedef std::list<MeshInfo> VAOs;
@@ -34,6 +34,45 @@ struct TexturesInfo
 	int opacityIndex;//Can be -1
 	bool fake;//Only an ambient texture can be fake
 	TexturesInfo(int, int, bool);
+};
+
+struct CameraInfo
+{
+public:
+	VM::mat4 model;
+	VM::mat4 view;
+	VM::mat4 projection;
+	static VM::mat4 ortho(float, float, float, float, float, float);
+	static VM::mat4 lookAt(const VM::vec3&, const VM::vec3&, const VM::vec3&);
+	VM::mat4 getMatrix();
+private:
+	static float dot(const VM::vec3&, const VM::vec3&);
+};
+
+
+class LightsHandler
+{
+public:
+	GLuint getShadowTexture();
+	VM::mat4 getMoonMatrix();
+	void addLightsInfo();
+	void setLightDirection(const VM::vec3&);
+	void calculateCamera();
+	GLuint createLights(std::vector<VAOs>&);
+private:
+	CameraInfo directionalLight_;
+	VM::vec3 lightDirection_;
+	GLuint fbo_;
+	GLuint texture_;
+	GLuint textureDrawProgram_;
+
+	unsigned int textureWidth_;
+	unsigned int textureHeight_;
+
+	void setupTexture();
+	void setupFBO();
+	void compileShaders();
+	GLuint drawTexture(std::vector<VAOs>& materials);
 };
 
 class FPSHandler
@@ -140,6 +179,8 @@ private:
 	int windowHeight_;
 
 	void createCamera();
+	void setCameraLocation();
+	void printCameraLocation();
 	void compileShaders();
 	void checkInfo();
 	void createModel();
@@ -158,12 +199,11 @@ private:
 	unsigned int sphereMeshSize_;
 
 	GLuint modelShader_;
-//	GLuint sphereShader_;
+	GLuint modelShaderLights_;
 
-
-//	LightsArray lights_;
-//	void updateLights();
-//	void passLights(GLuint);
+	VM::vec3 lightDirection_;
+	bool lightsEnabled_;
+	LightsHandler lights_;
 
 	FPSHandler fps_;
 	

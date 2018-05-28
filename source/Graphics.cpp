@@ -11,6 +11,188 @@ SslrInfo::SslrInfo(): enabled_(false), mrtProgram_(0), drawBuffersProgram_(0),
 
 const int FPSHandler::timeLength_ = 1000;
 
+VM::mat4 CameraInfo::ortho(float left, float right, float bottom, float top,
+	float zNear, float zFar)
+{
+	VM::mat4 result(1);
+	result[0][0] = 2.0 / (right - left);
+	result[1][1] = 2.0 / (top - bottom);
+	result[2][2] = -1 / (zFar - zNear);
+	result[3][0] = -(right + left) / (right - left);
+	result[3][1] = -(top + bottom) / (top - bottom);
+	result[3][2] = -zNear / (zFar - zNear);
+	return result;
+}
+
+VM::mat4 CameraInfo::lookAt(const VM::vec3& eye, const VM::vec3& center,
+	const VM::vec3& up)
+{
+	VM::vec3 f = VM::normalize(center - eye);
+	VM::vec3 s;
+	try{
+		s = VM::normalize(VM::cross(f, up));
+	}
+	catch (const char*)
+	{
+		s = VM::vec3(0, 0, 0);
+	}
+	VM::vec3 u = VM::cross(s, f);
+
+	VM::mat4 result(1);
+	
+	result[0][0] = s.x;
+	result[1][0] = s.y;
+	result[2][0] = s.z;
+	result[0][1] = u.x;
+	result[1][1] = u.y;
+	result[2][1] = u.z;
+	result[0][2] =-f.x;
+	result[1][2] =-f.y;
+	result[2][2] =-f.z;
+	result[3][0] =-dot(s, eye);
+	result[3][1] =-dot(u, eye);
+	result[3][2] = dot(f, eye);
+	return result;
+}
+
+float CameraInfo::dot(const VM::vec3& x, const VM::vec3& y)
+{
+	VM::vec3 temp = x * y;
+	return temp.x + temp.y + temp.z;
+}
+
+VM::mat4 CameraInfo::getMatrix()
+{
+	return projection * view * model;
+}
+
+GLuint LightsHandler::getShadowTexture()
+{
+	return texture_;
+}
+
+VM::mat4 LightsHandler::getMoonMatrix()
+{
+	return directionalLight_.getMatrix();
+}
+
+void LightsHandler::setLightDirection(const VM::vec3& lightDirection)
+{
+	lightDirection_ = lightDirection;
+}
+
+void LightsHandler::calculateCamera()
+{
+	GL::Camera camera;
+
+	camera.direction = -lightDirection_;
+	camera.position = -lightDirection_ * 1500;
+	camera.up = VM::vec3(0, 1, 0);
+
+	directionalLight_.model = camera.getModel();
+	directionalLight_.view = camera.getView();
+//	directionalLight_.view = CameraInfo::lookAt(-lightDirection_, 
+//		VM::vec3(0.0, 0.0, 0.0), VM::vec3(0.0, 1.0, 0.0));
+//	directionalLight_.projection = CameraInfo::ortho(
+//		-1.0, 1.0, -1.0, 1.0, -1.0, 2.0);
+//	directionalLight_.projection = CameraInfo::ortho(
+//		-10.0, 10.0, -10.0, 10.0, -10.0, 20.0);
+//	directionalLight_.projection = CameraInfo::ortho(
+//		-2186.0, 2078.0, -221, 1759, -1395, 1370);
+	directionalLight_.projection = CameraInfo::ortho(
+		-1500.0, 1500.0, -1500, 1500, 1.0, 3000.0);
+}
+
+void LightsHandler::setupTexture()
+{
+	GLint maxSize;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+	if (maxSize >= 8192)
+		textureWidth_ = textureHeight_ = 8192;
+	else
+		textureWidth_ = textureHeight_ = maxSize;
+	glGenTextures(1, &texture_);
+	glBindTexture(GL_TEXTURE_2D, texture_);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, textureWidth_,
+		textureHeight_, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0); CHECK_GL_ERRORS
+
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MIN_FILTER, GL_NEAREST); CHECK_GL_ERRORS
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MAG_FILTER, GL_NEAREST); CHECK_GL_ERRORS
+	
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void LightsHandler::setupFBO()
+{
+	glGenFramebuffers(1, &fbo_); CHECK_GL_ERRORS
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_); CHECK_GL_ERRORS
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+		GL_TEXTURE_2D, texture_, 0); CHECK_GL_ERRORS
+
+	if (GL_FRAMEBUFFER_COMPLETE != glCheckFramebufferStatus(GL_FRAMEBUFFER))
+		std::cout << "Framebuffer incomplete!" << std::endl;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); CHECK_GL_ERRORS
+}
+
+void LightsHandler::compileShaders()
+{
+	textureDrawProgram_ = GL::CompileShaderProgram("LightView");
+		CHECK_GL_ERRORS
+}
+
+GLuint LightsHandler::drawTexture(std::vector<VAOs>& materials_)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_); CHECK_GL_ERRORS
+	glDrawBuffer(GL_NONE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	glViewport(0, 0, textureWidth_, textureHeight_);
+
+	GLint cameraLocation =
+		glGetUniformLocation(textureDrawProgram_, "camera"); CHECK_GL_ERRORS
+
+	glUseProgram(textureDrawProgram_); CHECK_GL_ERRORS
+	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
+		directionalLight_.getMatrix().data().data()); CHECK_GL_ERRORS
+
+	for (unsigned int i = 0; i < materials_.size(); i++)
+	{
+		VAOs meshes = materials_[i];
+		for (auto iter = meshes.begin();
+			 iter != meshes.end();
+			 iter++)
+		{
+			glBindVertexArray(iter->first); CHECK_GL_ERRORS
+			glDrawElements(GL_TRIANGLES, iter->second, GL_UNSIGNED_INT, 0);
+				CHECK_GL_ERRORS
+			glBindVertexArray(0); CHECK_GL_ERRORS
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(0);
+	return texture_;
+}
+
+GLuint LightsHandler::createLights(std::vector<VAOs>& materials_)
+{
+	calculateCamera();
+	compileShaders();
+	setupTexture();
+	setupFBO();
+	GLuint result = drawTexture(materials_);
+	return result;
+}
+
 FPSHandler::FPSHandler()
 {
 	while (measurements_.size() != 0)
@@ -293,9 +475,12 @@ void Graphics::init(int windowWidth, int windowHeight)
 	windowHeight_ = windowHeight;
 	windowWidth_ = windowWidth;
 	timeCaptureEnabled_ = false;
+	lightsEnabled_ = false;
+	lightDirection_ = VM::vec3(-0.3, -1.0, -0.1);
 
 	sslr_.setWindowSize(windowWidth, windowHeight);
 	sslr_.setRecommendationsTexDivider(RecTexDivValue);
+	lights_.setLightDirection(normalize(lightDirection_));
 
 	GraphicalPointer = this;
 
@@ -336,7 +521,6 @@ void Graphics::init(int windowWidth, int windowHeight)
 	glewExperimental = true; CHECK_GL_ERRORS
 	glewInit();
 	glGetError();
-
 	std::cout << "success" << std::endl;
 }
 
@@ -359,9 +543,28 @@ void Graphics::createMap(const aiScene* scene)
 	createModel();
 	std::cout << "success" << std::endl;
 
+	std::cout << "Calculating lights... " << std::flush;
+	lights_.createLights(materials_);
+	std::cout << "success" << std::endl;
+
 /*	std::cout << "Creating lights... " << std::flush;
 	createLights();
 	std::cout << "success" << std::endl;*/
+}
+
+void Graphics::printCameraLocation()
+{
+	std::cout << "Camera direction: " << camera_.direction.x << ' ' <<
+		camera_.direction.y << ' ' << camera_.direction.z << std::endl <<
+		"Camera position: " << camera_.position.x << ' ' <<
+		camera_.position.y << ' ' << camera_.position.z << std::endl;
+}
+
+void Graphics::setCameraLocation()
+{
+	camera_.direction = VM::vec3(-0.626697, 0.148901, 0.764905);
+	camera_.position = VM::vec3(-962.632, 163.074, 137.32);
+	camera_.up = VM::vec3(0, 1, 0);
 }
 
 void Graphics::createCamera()
@@ -378,6 +581,8 @@ void Graphics::createCamera()
 void Graphics::compileShaders()
 {
 	modelShader_ = GL::CompileShaderProgram("sponza");
+		CHECK_GL_ERRORS
+	modelShaderLights_ = GL::CompileShaderProgram("sponzaWithLights");
 		CHECK_GL_ERRORS
 }
 
@@ -664,17 +869,23 @@ void Graphics::timeCaptureEnd()
 void Graphics::drawSponza()
 {
 	fps_.updateFPS();
+	GLuint shaderProgram;
+	if (lightsEnabled_)
+		shaderProgram = modelShaderLights_;
+	else
+		shaderProgram = modelShader_;
+
 	GLint cameraLocation =
-		glGetUniformLocation(modelShader_, "camera"); CHECK_GL_ERRORS
+		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
 	GLint materialIndexLocation =
-		glGetUniformLocation(modelShader_, "material"); CHECK_GL_ERRORS
+		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
 	GLint cameraPosLoc =
-		glGetUniformLocation(modelShader_, "cameraPosition");
+		glGetUniformLocation(shaderProgram, "cameraPosition");
 			CHECK_GL_ERRORS
 	GLint textureLocation =
-		glGetUniformLocation(modelShader_, "textureArray"); CHECK_GL_ERRORS
+		glGetUniformLocation(shaderProgram, "textureArray"); CHECK_GL_ERRORS
 
-	glUseProgram(modelShader_); CHECK_GL_ERRORS
+	glUseProgram(shaderProgram); CHECK_GL_ERRORS
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
 		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
 	GLfloat camPos[3];
@@ -683,8 +894,41 @@ void Graphics::drawSponza()
 	camPos[2] = camera_.position.z;
 	glUniform3fv(cameraPosLoc, 1, camPos);
 
-	glUniform1i(textureLocation, textures_);
 //	passLights(modelShader_);
+
+	if (lightsEnabled_)
+	{
+		GLint moonDepthLocation =
+			glGetUniformLocation(shaderProgram, "moonLightDepth");
+		GLint moonCamLocation =
+			glGetUniformLocation(shaderProgram, "moonCam");
+		GLint lightDirLocation =
+			glGetUniformLocation(shaderProgram, "moonDir");
+
+		glUniformMatrix4fv(moonCamLocation, 1, GL_TRUE,
+			lights_.getMoonMatrix().data().data()); CHECK_GL_ERRORS
+		glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
+			camera_.getMatrix().data().data()); CHECK_GL_ERRORS
+
+		glUniform1i(textureLocation, 0); CHECK_GL_ERRORS
+		glUniform1i(moonDepthLocation, 1); CHECK_GL_ERRORS
+		
+		GLfloat values[3] =
+			{lightDirection_.x, lightDirection_.y, lightDirection_.z};
+		glUniform3fv(lightDirLocation, 1, values);
+
+		glActiveTexture(GL_TEXTURE0); CHECK_GL_ERRORS
+		glBindTexture(GL_TEXTURE_2D_ARRAY, textures_); CHECK_GL_ERRORS
+		glActiveTexture(GL_TEXTURE1); CHECK_GL_ERRORS
+		glBindTexture(GL_TEXTURE_2D, lights_.getShadowTexture()); CHECK_GL_ERRORS
+		glTexParameteri(GL_TEXTURE_2D,
+			GL_TEXTURE_MIN_FILTER, GL_LINEAR); CHECK_GL_ERRORS
+		glTexParameteri(GL_TEXTURE_2D,
+			GL_TEXTURE_MAG_FILTER, GL_LINEAR); CHECK_GL_ERRORS
+	} else
+	{
+		glUniform1i(textureLocation, textures_);
+	}
 
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
@@ -899,16 +1143,12 @@ void Graphics::drawFinalImage()
 		GL_TEXTURE_MAG_FILTER, GL_LINEAR); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, sslr_.normalBuffer());
-//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, sslr_.reflectionBuffer());
-//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, sslr_.depthBuffer());
-//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, sslr_.recommendationsBuffer());
-//	glGenerateMipmap(GL_TEXTURE_2D); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
 		GL_TEXTURE_MIN_FILTER, GL_LINEAR); CHECK_GL_ERRORS
 	glTexParameteri(GL_TEXTURE_2D,
@@ -1050,9 +1290,7 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	}
 	else if (key == 'p' || key == 'P')
 	{
-		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
-				  << camera_.position.y << ' '
-				  << camera_.position.z << std::endl;
+		printCameraLocation();
 	}
 	else if (key == 't' || key == 'T')
 	{
@@ -1063,6 +1301,14 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 			accumulatedTime_ = 0;
 			accumulatedTimeDivider_ = 0;
 		}
+	}
+	else if (key == 'l' || key == 'L')
+	{
+		lightsEnabled_ = !lightsEnabled_;
+	}
+	else if (key == 'c' || key == 'C')
+	{
+		setCameraLocation();
 	}
 }
 
