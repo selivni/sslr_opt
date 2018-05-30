@@ -208,7 +208,8 @@ void main()
 	} while ((abs(realDepth - prCurrPoint.z) > pointPrecision ||
 			  iter < 2) && iter < iterationLimit);
 	vec4 viewVector = getViewVector(currentPoint, startingPoint);
-	if (abs(prCurrPoint.x) > 1 || abs(prCurrPoint.y) > 1)
+	if (abs(prCurrPoint.x) > 1 || abs(prCurrPoint.y) > 1 || 
+		abs(realDepth - prCurrPoint.z) > pointPrecision)
 	{
 		const1 = 1;
 		const2 = 0;
@@ -219,6 +220,11 @@ void main()
 		const1 = 1 - const2;
 	}
 //	outColour = vec4(filterBlur(prCurrPoint.xy, length(viewVector)), 1);
+/*
+	float colourValue = 1 - (iter - 2) / (iterationLimit - 2);
+	outColour = vec4(colourValue, colourValue, colourValue, 1);
+	return;
+*/
 	outColour = const1 * texture(colour, st) +
 		const2 * vec4(filterBlur(prCurrPoint.xy, length(viewVector)), 1);
 }

@@ -570,6 +570,8 @@ void Graphics::setCameraLocation()
 {
 	camera_.direction = VM::vec3(-0.626697, 0.148901, 0.764905);
 	camera_.position = VM::vec3(-962.632, 163.074, 137.32);
+//	camera_.direction = VM::vec3(1, 0, 0);
+//	camera_.position = VM::vec3(-16, 100, -32);
 	camera_.up = VM::vec3(0, 1, 0);
 }
 

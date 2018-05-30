@@ -39,7 +39,7 @@ void main()
 	moonPerspective.z /= moonPerspective.w;
 	float moonLight;
 	if (dot(moonDir, norm) >= 0 ||
-		moonPerspective.z >= texture(moonLightDepth, moonPerspective.xy).r * 1.07)
+		moonPerspective.z >= texture(moonLightDepth, moonPerspective.xy).r * 1.10)
 		moonLight = 0.1;
 	else
 		moonLight = 1.0;
