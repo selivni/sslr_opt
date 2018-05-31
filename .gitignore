@@ -1,4 +1,5 @@
 build/**
+!build/*.placeholder
 **/CMakeFiles/
 **/CMakeCache.txt
 **/*.swp
