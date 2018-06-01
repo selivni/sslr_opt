@@ -3,7 +3,7 @@ This project draws Sponza, has a SSLR implementation for glossy reflections, als
 To make:
 Linux: cd build && cmake .. && make all
 
-Windows: Not really ported, but if you mess around with libs and compile/link them all, everything whould be fine.
+Windows: Not really ported, but if you mess around with libs and compile/link them all, everything should be fine.
 
 Controls:
 	
