@@ -1,8 +1,6 @@
 #include "Graphics.h"
 #include "PointerGraphics.h"
 
-
-
 const unsigned int Graphics::RecTexDivValue = 4;
 void Graphics::init(int windowWidth, int windowHeight)
 {
@@ -143,25 +141,34 @@ void Graphics::checkInfo()
 
 std::vector<unsigned int> Graphics::concatFaces(aiMesh* mesh)
 {
+	GLuint localSum = 0;
 	std::vector<unsigned int> result;
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 	{
 		if (mesh->mFaces[i].mNumIndices == 3)
 		{
 			for (unsigned int j = 0; j < mesh->mFaces[i].mNumIndices; j++)
-				result.push_back(mesh->mFaces[i].mIndices[j]);
+			{
+				result.push_back(mesh->mFaces[i].mIndices[j] +
+					indicesLocalSum_);
+//				std::cout << mesh->mFaces[i].mIndices[j] + indicesLocalSum_ << ' ';
+			}
+			localSum += 3;
 		} else if (mesh->mFaces[i].mNumIndices == 4)
 		{
 			unsigned int* indices = mesh->mFaces[i].mIndices;
 			for (unsigned int j = 0; j < 3; j++)
-				result.push_back(indices[j]);
+				result.push_back(indices[j] + indicesLocalSum_);
 			for (unsigned int j = 0; j < 3; j++)
-				result.push_back(indices[j+1]);
+				result.push_back(indices[j+1] + indicesLocalSum_);
+			localSum += 4;
 		} else
 			throw std::invalid_argument(
 				std::to_string(mesh->mFaces[i].mNumIndices) +
 				" vertices in a single face! Cant deal with it, aborting");
 	}
+	indicesLocalSum_ += localSum;
+//	std::cout << std::endl;
 	return result;
 }
 
@@ -354,8 +361,112 @@ void Graphics::loadTextures()
 				  << " opacity textures" << std::endl;
 }
 
+void Graphics::addMaterialVertexInfo(GLuint vao, GLfloat materialIndex,
+	unsigned int size)
+{
+	GLfloat materialIndices[size];
+	for (unsigned int i = 0; i < size; i++)
+	{
+		materialIndices[i] = materialIndex;
+	}
+	GLuint matBuffer;
+	glBindVertexArray(vao);
+	glGenBuffers(1, &matBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, matBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * size, materialIndices,
+		GL_STATIC_DRAW);CHECK_GL_ERRORS
+	GLuint matLocation = glGetAttribLocation(modelShader_, "material");CHECK_GL_ERRORS
+	glEnableVertexAttribArray(matLocation); CHECK_GL_ERRORS
+	glVertexAttribPointer(matLocation, 1, GL_FLOAT, GL_FALSE, 0, 0); CHECK_GL_ERRORS
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+GLuint Graphics::getVertSum()
+{
+	GLuint result = 0;
+	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
+		result += scene_->mMeshes[i]->mNumVertices;
+	return result;
+}
+
+GLuint Graphics::getIndSum(const TrianglesIndices& faces)
+{
+	GLuint result = 0;
+	for (auto i = faces.begin(); i != faces.end(); i++)
+		result += i->size();
+	return result;
+}
+
+void Graphics::concatAllFaces(TrianglesIndices& faces)
+{
+	faces.clear();
+	indicesLocalSum_ = 0;
+	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
+		faces.push_back(concatFaces(scene_->mMeshes[i]));
+}
+
+void Graphics::loadData(ModelArrays& arrays)
+{
+	glGenVertexArrays(1, &mainVAO_);
+	glBindVertexArray(mainVAO_);
+
+	GLuint vertBuffer;
+	glGenBuffers(1, &vertBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertBuffer);
+	glBufferData(GL_ARRAY_BUFFER, arrays.vertices().size() * sizeof(vec3f),
+		arrays.vertices().data(), GL_STATIC_DRAW); CHECK_GL_ERRORS
+	GLuint vertLocation = glGetAttribLocation(modelShader_, "point"); CHECK_GL_ERRORS
+	glEnableVertexAttribArray(vertLocation); CHECK_GL_ERRORS
+	glVertexAttribPointer(vertLocation, 3, GL_FLOAT, GL_FALSE, 0, 0); CHECK_GL_ERRORS
+
+	GLuint uvBuffer;
+	glGenBuffers(1, &uvBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glBufferData(GL_ARRAY_BUFFER, arrays.uvCoords().size() * sizeof(vec3f),
+		arrays.uvCoords().data(), GL_STATIC_DRAW); CHECK_GL_ERRORS
+	GLuint uvLocation = glGetAttribLocation(modelShader_, "uvCoord"); CHECK_GL_ERRORS
+	glEnableVertexAttribArray(uvLocation); CHECK_GL_ERRORS
+	glVertexAttribPointer(uvLocation, 3, GL_FLOAT, GL_FALSE, 0, 0); CHECK_GL_ERRORS
+
+	GLuint normBuffer;
+	glGenBuffers(1, &normBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, normBuffer);
+	glBufferData(GL_ARRAY_BUFFER, arrays.normals().size() * sizeof(vec3f),
+		arrays.normals().data(), GL_STATIC_DRAW); CHECK_GL_ERRORS
+	GLuint normLocation = glGetAttribLocation(modelShader_, "normal"); CHECK_GL_ERRORS
+	glEnableVertexAttribArray(normLocation);
+	glVertexAttribPointer(normLocation, 3, GL_FLOAT, GL_FALSE, 0, 0); CHECK_GL_ERRORS
+
+	GLuint facesBuffer;
+	glGenBuffers(1, &facesBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, facesBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, arrays.indices().size() *
+		sizeof(GLuint), arrays.indices().data(), GL_STATIC_DRAW); CHECK_GL_ERRORS
+	glBindVertexArray(0);
+}
+
 void Graphics::createModel()
 {
+	TrianglesIndices faces;
+	concatAllFaces(faces);
+	GLuint verticesSum = getVertSum();
+	GLuint indicesSum = getIndSum(faces);
+	ModelArrays mainArrays(verticesSum, indicesSum);
+	auto listIterator = faces.begin();
+	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
+	{
+		mainArrays.concat(scene_->mMeshes[i], *listIterator);
+		listIterator++;
+	}
+	GLsizei sum;
+	for (auto i = mainArrays.indicesCounts().begin();
+		i != mainArrays.indicesCounts().end(); i++)
+		sum += *i;
+	if (mainArrays.vertices().size() != mainArrays.uvCoords().size() ||
+		mainArrays.vertices().size() != mainArrays.normals().size() ||
+		sum != indicesLocalSum_)
+		std::cout << "Incorrect data concatenation!" << std::endl;
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		VAOs meshes;
@@ -374,6 +485,21 @@ void Graphics::createModel()
 		meshInfo.second = length;
 		materials_[index].push_back(meshInfo);
 	}
+
+/*
+	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
+	{
+		VAOs meshes = materials_[i];
+		for (auto iter = meshes.begin(); iter != meshes.end(); iter++)
+		{
+			addMaterialVertexInfo(iter->first, static_cast<GLfloat> (i),
+				iter->second);
+		}
+	}
+*/
+	loadData(mainArrays);
+	indicesSizes_ = mainArrays.indicesCounts();
+	indicesOffsets_ = mainArrays.indicesStarts();
 	#ifdef GRAPHICS_M_DEBUG_SUPER
 	checkInfo();
 	#endif
@@ -413,8 +539,8 @@ void Graphics::drawSponza()
 
 	GLint cameraLocation =
 		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
-	GLint materialIndexLocation =
-		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
+//	GLint materialIndexLocation =
+//		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
 	GLint cameraPosLoc =
 		glGetUniformLocation(shaderProgram, "cameraPosition");
 			CHECK_GL_ERRORS
@@ -465,12 +591,15 @@ void Graphics::drawSponza()
 	{
 		glUniform1i(textureLocation, textures_);
 	}
-
-	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
+	glBindVertexArray(mainVAO_);
+	glMultiDrawElements(GL_TRIANGLES, indicesSizes_.data(), GL_UNSIGNED_INT,
+		const_cast<const GLvoid**>(reinterpret_cast<GLvoid**>(indicesOffsets_.data())),
+			indicesSizes_.size());
+/*	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		VAOs meshes = materials_[i];
-		GLuint materialIndex = i;
-		glUniform1ui(materialIndexLocation, materialIndex);
+//		GLuint materialIndex = i;
+//		glUniform1ui(materialIndexLocation, materialIndex);
 		for (auto iter = meshes.begin();
 			 iter != meshes.end();
 			 iter++)
@@ -481,6 +610,7 @@ void Graphics::drawSponza()
 			glBindVertexArray(0); CHECK_GL_ERRORS
 		}
 	}
+*/
 	glUseProgram(0);
 }
 
@@ -503,8 +633,8 @@ void Graphics::drawPrimaryTextures()
 	fps_.updateFPS();
 	GLint cameraLocation =
 		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
-	GLint materialIndexLocation =
-		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
+//	GLint materialIndexLocation =
+//		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
 	GLint cameraPosLoc =
 		glGetUniformLocation(shaderProgram, "cameraPosition");
 			CHECK_GL_ERRORS
@@ -557,8 +687,8 @@ void Graphics::drawPrimaryTextures()
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
 		VAOs meshes = materials_[i];
-		GLuint materialIndex = i;
-		glUniform1ui(materialIndexLocation, materialIndex);
+//		GLuint materialIndex = i;
+//		glUniform1ui(materialIndexLocation, materialIndex);
 		for (auto iter = meshes.begin();
 			 iter != meshes.end();
 			 iter++)

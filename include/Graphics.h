@@ -14,6 +14,7 @@
 #include "LightsHandler.h"
 #include "FPSHandler.h"
 #include "TexturesInfo.h"
+#include "ModelArrays.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -59,6 +60,10 @@ private:
 	GLuint textures_;
 	GLuint texturesCount_;
 	GLuint opacityTexCount_;
+	GLuint mainVAO_;
+	GLsizei indicesLocalSum_;
+	std::vector<GLsizei> indicesSizes_;
+	std::vector<GLuint*> indicesOffsets_;
 	std::vector<VAOs> materials_;
 	std::vector<TexturesInfo> texturesInfo_;
 
@@ -92,8 +97,13 @@ private:
 	void flushTextures();
 	bool loadTexture(const char*);
 
+	GLuint getVertSum();
+	GLuint getIndSum(const TrianglesIndices&);
+	void concatAllFaces(TrianglesIndices&);
 	std::vector<unsigned int> concatFaces(aiMesh*);
 	MeshInfo loadMesh(int, unsigned int&);
+	void addMaterialVertexInfo(GLuint, GLfloat, unsigned int);
+	void loadData(ModelArrays&);
 //	void createLights();
 
 	SslrInfo sslr_;

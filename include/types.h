@@ -9,3 +9,6 @@ typedef std::list<MeshInfo> VAOs;
 //GLuint - texture index; VAOs - meshes' VAOs
 //typedef std::pair<GLuint[2], VAOs> MaterialInfo;
 //1 - ambient texture index, 2 - opacity texture index
+
+typedef std::list<std::vector<unsigned int>> TrianglesIndices;
+//Basically faces info
