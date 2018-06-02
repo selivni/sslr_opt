@@ -1,7 +1,7 @@
 #include "Graphics.h"
 #include "PointerGraphics.h"
 
-const unsigned int Graphics::RecTexDivValue = 4;
+const unsigned int Graphics::RecTexDivValue = 8;
 void Graphics::init(int windowWidth, int windowHeight)
 {
 	windowHeight_ = windowHeight;
@@ -147,70 +147,6 @@ std::vector<unsigned int> Graphics::concatFaces(aiMesh* mesh)
 	}
 	verticesLocalSum_ += mesh->mNumVertices;
 //	std::cout << std::endl;
-	return result;
-}
-
-MeshInfo Graphics::loadMesh(int i, unsigned int& length)
-{
-	MeshInfo result;
-	GLuint shader;
-	unsigned int material = scene_->mMeshes[i]->mMaterialIndex;
-
-	shader = modelShader_;
-	
-	glGenVertexArrays(1, &result.first);
-	glBindVertexArray(result.first);
-
-	GLuint vertBuffer;
-	aiVector3D* vertices = scene_->mMeshes[i]->mVertices;
-	int vertLength = scene_->mMeshes[i]->mNumVertices;
-
-	glGenBuffers(1, &vertBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(aiVector3D) * vertLength,
-				 vertices, GL_STATIC_DRAW); CHECK_GL_ERRORS
-	GLuint vertLocation = glGetAttribLocation(shader, "point"); CHECK_GL_ERRORS
-	glEnableVertexAttribArray(vertLocation); CHECK_GL_ERRORS
-	glVertexAttribPointer(vertLocation, 3, GL_FLOAT, GL_FALSE, 0, 0); CHECK_GL_ERRORS
-
-	GLuint uvBuffer;
-	aiVector3D* uv = scene_->mMeshes[i]->mTextureCoords[0];
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glGenBuffers(1, &uvBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(aiVector3D) * vertLength,
-				 uv, GL_STATIC_DRAW); CHECK_GL_ERRORS
-	GLuint uvLocation = glGetAttribLocation(shader, "uvCoord"); CHECK_GL_ERRORS
-	glEnableVertexAttribArray(uvLocation); CHECK_GL_ERRORS
-	glVertexAttribPointer(uvLocation, 3, GL_FLOAT, GL_FALSE, 0, 0); CHECK_GL_ERRORS
-
-	GLuint normBuffer;
-	aiVector3D* norm = scene_->mMeshes[i]->mNormals;
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glGenBuffers(1, &normBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, normBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(aiVector3D) * vertLength,
-				 norm, GL_STATIC_DRAW); CHECK_GL_ERRORS
-	GLuint normLocation = glGetAttribLocation(shader, "normal");
-		CHECK_GL_ERRORS
-	glEnableVertexAttribArray(normLocation); CHECK_GL_ERRORS
-	glVertexAttribPointer(normLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		CHECK_GL_ERRORS
-
-	GLuint facesBuffer;
-	std::vector<unsigned int> faces = concatFaces(scene_->mMeshes[i]);
-	length = faces.size();
-
-	glGenBuffers(1, &facesBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, facesBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * faces.size(),
-				 faces.data(), GL_STATIC_DRAW); CHECK_GL_ERRORS
-
-	glBindVertexArray(0);
-	
-	result.second = material;
 	return result;
 }
 
@@ -449,34 +385,11 @@ void Graphics::createModel()
 */
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
-//		VAOs meshes;
 		TexturesInfo material(-1, -1, false);
-//		materials_.push_back(meshes);
 		texturesInfo_.push_back(material);
 	}
 
 	loadTextures();
-/*
-	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
-	{
-		unsigned int length;
-		MeshInfo meshInfo = loadMesh(i, length);
-		unsigned int index = meshInfo.second;
-		meshInfo.second = length;
-		materials_[index].push_back(meshInfo);
-	}
-*/
-/*
-	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
-	{
-		VAOs meshes = materials_[i];
-		for (auto iter = meshes.begin(); iter != meshes.end(); iter++)
-		{
-			addMaterialVertexInfo(iter->first, static_cast<GLfloat> (i),
-				iter->second);
-		}
-	}
-*/
 	loadData(mainArrays);
 	indicesSizes_ = mainArrays.indicesCounts();
 	indicesOffsets_ = mainArrays.indicesStarts();

@@ -100,7 +100,6 @@ private:
 	GLuint getIndSum(const TrianglesIndices&);
 	void concatAllFaces(TrianglesIndices&);
 	std::vector<unsigned int> concatFaces(aiMesh*);
-	MeshInfo loadMesh(int, unsigned int&);
 	void addMaterialVertexInfo(GLuint, GLfloat, unsigned int);
 	void loadData(ModelArrays&);
 //	void createLights();
