@@ -82,7 +82,7 @@ void LightsHandler::compileShaders()
 		CHECK_GL_ERRORS
 }
 
-GLuint LightsHandler::drawTexture(std::vector<VAOs>& materials_)
+GLuint LightsHandler::drawTexture(GLuint vao, GLsizei elementsCount)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_); CHECK_GL_ERRORS
 	glDrawBuffer(GL_NONE);
@@ -99,30 +99,20 @@ GLuint LightsHandler::drawTexture(std::vector<VAOs>& materials_)
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
 		directionalLight_.getMatrix().data().data()); CHECK_GL_ERRORS
 
-	for (unsigned int i = 0; i < materials_.size(); i++)
-	{
-		VAOs meshes = materials_[i];
-		for (auto iter = meshes.begin();
-			 iter != meshes.end();
-			 iter++)
-		{
-			glBindVertexArray(iter->first); CHECK_GL_ERRORS
-			glDrawElements(GL_TRIANGLES, iter->second, GL_UNSIGNED_INT, 0);
-				CHECK_GL_ERRORS
-			glBindVertexArray(0); CHECK_GL_ERRORS
-		}
-	}
+	glBindVertexArray(vao);
+	glDrawElements(GL_TRIANGLES, elementsCount, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);
 	return texture_;
 }
 
-GLuint LightsHandler::createLights(std::vector<VAOs>& materials_)
+GLuint LightsHandler::createLights(GLuint vao, GLsizei elementsCount)
 {
 	calculateCamera();
 	compileShaders();
 	setupTexture();
 	setupFBO();
-	GLuint result = drawTexture(materials_);
+	GLuint result = drawTexture(vao, elementsCount);
 	return result;
 }

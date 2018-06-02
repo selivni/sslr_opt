@@ -12,7 +12,7 @@ public:
 	void addLightsInfo();
 	void setLightDirection(const VM::vec3&);
 	void calculateCamera();
-	GLuint createLights(std::vector<VAOs>&);
+	GLuint createLights(GLuint, GLsizei);
 private:
 	CameraInfo directionalLight_;
 	VM::vec3 lightDirection_;
@@ -26,5 +26,5 @@ private:
 	void setupTexture();
 	void setupFBO();
 	void compileShaders();
-	GLuint drawTexture(std::vector<VAOs>& materials);
+	GLuint drawTexture(GLuint, GLsizei);
 };

@@ -49,7 +49,6 @@ private:
 	void setCameraLocation();
 	void printCameraLocation();
 	void compileShaders();
-	void checkInfo();
 	void createModel();
 //
 	bool mouseCaptured_;
@@ -61,10 +60,10 @@ private:
 	GLuint texturesCount_;
 	GLuint opacityTexCount_;
 	GLuint mainVAO_;
+	GLsizei verticesLocalSum_;
 	GLsizei indicesLocalSum_;
 	std::vector<GLsizei> indicesSizes_;
 	std::vector<GLuint*> indicesOffsets_;
-	std::vector<VAOs> materials_;
 	std::vector<TexturesInfo> texturesInfo_;
 
 	unsigned int sphereMeshSize_;

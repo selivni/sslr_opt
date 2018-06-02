@@ -76,7 +76,7 @@ void Graphics::createMap(const aiScene* scene)
 	std::cout << "success" << std::endl;
 
 	std::cout << "Calculating lights... " << std::flush;
-	lights_.createLights(materials_);
+	lights_.createLights(mainVAO_, indicesLocalSum_);
 	std::cout << "success" << std::endl;
 
 /*	std::cout << "Creating lights... " << std::flush;
@@ -120,28 +120,8 @@ void Graphics::compileShaders()
 		CHECK_GL_ERRORS
 }
 
-void Graphics::checkInfo()
-{
-	std::cout << "Checking what's loaded:" << std::endl;
-	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
-	{
-		std::cout << i + 1 << ": ";
-		for (auto iter = materials_[i].begin();
-			 iter != materials_[i].end();
-			 iter++)
-		{
-			std::cout << iter->first << ' ';
-		}
-		std::cout << std::endl;
-		std::cout << "Textures: ambient = " << texturesInfo_[i].ambientIndex <<
-			", opacity = " << texturesInfo_[i].opacityIndex << " fake = " <<
-			texturesInfo_[i].fake << std::endl;
-	}
-}
-
 std::vector<unsigned int> Graphics::concatFaces(aiMesh* mesh)
 {
-	GLuint localSum = 0;
 	std::vector<unsigned int> result;
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 	{
@@ -150,24 +130,22 @@ std::vector<unsigned int> Graphics::concatFaces(aiMesh* mesh)
 			for (unsigned int j = 0; j < mesh->mFaces[i].mNumIndices; j++)
 			{
 				result.push_back(mesh->mFaces[i].mIndices[j] +
-					indicesLocalSum_);
-//				std::cout << mesh->mFaces[i].mIndices[j] + indicesLocalSum_ << ' ';
+					verticesLocalSum_);
+//				std::cout << mesh->mFaces[i].mIndices[j] + verticesLocalSum_ << ' ';
 			}
-			localSum += 3;
 		} else if (mesh->mFaces[i].mNumIndices == 4)
 		{
 			unsigned int* indices = mesh->mFaces[i].mIndices;
 			for (unsigned int j = 0; j < 3; j++)
-				result.push_back(indices[j] + indicesLocalSum_);
+				result.push_back(indices[j] + verticesLocalSum_);
 			for (unsigned int j = 0; j < 3; j++)
-				result.push_back(indices[j+1] + indicesLocalSum_);
-			localSum += 4;
+				result.push_back(indices[j+1] + verticesLocalSum_);
 		} else
 			throw std::invalid_argument(
 				std::to_string(mesh->mFaces[i].mNumIndices) +
 				" vertices in a single face! Cant deal with it, aborting");
 	}
-	indicesLocalSum_ += localSum;
+	verticesLocalSum_ += mesh->mNumVertices;
 //	std::cout << std::endl;
 	return result;
 }
@@ -401,7 +379,7 @@ GLuint Graphics::getIndSum(const TrianglesIndices& faces)
 void Graphics::concatAllFaces(TrianglesIndices& faces)
 {
 	faces.clear();
-	indicesLocalSum_ = 0;
+	verticesLocalSum_ = 0;
 	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
 		faces.push_back(concatFaces(scene_->mMeshes[i]));
 }
@@ -459,24 +437,26 @@ void Graphics::createModel()
 		mainArrays.concat(scene_->mMeshes[i], *listIterator);
 		listIterator++;
 	}
-	GLsizei sum;
+	indicesLocalSum_ = 0;
 	for (auto i = mainArrays.indicesCounts().begin();
 		i != mainArrays.indicesCounts().end(); i++)
-		sum += *i;
+		indicesLocalSum_ += *i;
+/*
 	if (mainArrays.vertices().size() != mainArrays.uvCoords().size() ||
 		mainArrays.vertices().size() != mainArrays.normals().size() ||
 		sum != indicesLocalSum_)
 		std::cout << "Incorrect data concatenation!" << std::endl;
+*/
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
-		VAOs meshes;
+//		VAOs meshes;
 		TexturesInfo material(-1, -1, false);
-		materials_.push_back(meshes);
+//		materials_.push_back(meshes);
 		texturesInfo_.push_back(material);
 	}
 
 	loadTextures();
-
+/*
 	for (unsigned int i = 0; i < scene_->mNumMeshes; i++)
 	{
 		unsigned int length;
@@ -485,7 +465,7 @@ void Graphics::createModel()
 		meshInfo.second = length;
 		materials_[index].push_back(meshInfo);
 	}
-
+*/
 /*
 	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
 	{
@@ -500,9 +480,6 @@ void Graphics::createModel()
 	loadData(mainArrays);
 	indicesSizes_ = mainArrays.indicesCounts();
 	indicesOffsets_ = mainArrays.indicesStarts();
-	#ifdef GRAPHICS_M_DEBUG_SUPER
-	checkInfo();
-	#endif
 }
 
 void Graphics::timeCaptureBegin()
@@ -592,25 +569,11 @@ void Graphics::drawSponza()
 		glUniform1i(textureLocation, textures_);
 	}
 	glBindVertexArray(mainVAO_);
-	glMultiDrawElements(GL_TRIANGLES, indicesSizes_.data(), GL_UNSIGNED_INT,
-		const_cast<const GLvoid**>(reinterpret_cast<GLvoid**>(indicesOffsets_.data())),
-			indicesSizes_.size());
-/*	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
-	{
-		VAOs meshes = materials_[i];
-//		GLuint materialIndex = i;
-//		glUniform1ui(materialIndexLocation, materialIndex);
-		for (auto iter = meshes.begin();
-			 iter != meshes.end();
-			 iter++)
-		{
-			glBindVertexArray(iter->first); CHECK_GL_ERRORS
-			glDrawElements(GL_TRIANGLES, iter->second, GL_UNSIGNED_INT, 0);
-				CHECK_GL_ERRORS
-			glBindVertexArray(0); CHECK_GL_ERRORS
-		}
-	}
-*/
+	glDrawElements(GL_TRIANGLES, indicesLocalSum_, GL_UNSIGNED_INT, 0); CHECK_GL_ERRORS
+	glBindVertexArray(0);
+//	glMultiDrawElements(GL_TRIANGLES, indicesSizes_.data(), GL_UNSIGNED_INT,
+//		const_cast<const GLvoid**>(reinterpret_cast<GLvoid**>(indicesOffsets_.data())),
+//			indicesSizes_.size());
 	glUseProgram(0);
 }
 
@@ -684,21 +647,8 @@ void Graphics::drawPrimaryTextures()
 		glUniform1i(textureLocation, textures_);
 	}
 
-	for (unsigned int i = 0; i < scene_->mNumMaterials; i++)
-	{
-		VAOs meshes = materials_[i];
-//		GLuint materialIndex = i;
-//		glUniform1ui(materialIndexLocation, materialIndex);
-		for (auto iter = meshes.begin();
-			 iter != meshes.end();
-			 iter++)
-		{
-			glBindVertexArray(iter->first); CHECK_GL_ERRORS
-			glDrawElements(GL_TRIANGLES, iter->second, GL_UNSIGNED_INT, 0);
-				CHECK_GL_ERRORS
-			glBindVertexArray(0); CHECK_GL_ERRORS
-		}
-	}
+	glBindVertexArray(mainVAO_);
+	glDrawElements(GL_TRIANGLES, indicesLocalSum_, GL_UNSIGNED_INT, 0); CHECK_GL_ERRORS
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);
 }

@@ -39,7 +39,7 @@ void ModelArrays::concat(const aiMesh* mesh, std::vector<unsigned int>& faces)
 	{
 		vertices_.push_back(vert[i]);
 		uvCoords_.push_back(uv[i]);
-		uvCoords_[uvCoords_.size()].z = mesh->mMaterialIndex;
+		uvCoords_[uvCoords_.size() - 1].z = mesh->mMaterialIndex;
 		normals_.push_back(norm[i]);
 	}
 	for (auto i = faces.begin(); i != faces.end(); i++)
