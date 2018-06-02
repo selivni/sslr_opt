@@ -4,8 +4,6 @@ in vec3 uv;
 in vec3 norm;
 in vec3 pointPosition;
 
-uniform uint material;
-
 uniform sampler2DArray textures;
 
 uniform sampler2D moonLightDepth;
@@ -16,19 +14,18 @@ out vec4 outColor;
 
 void main()
 {
-	float materialIndex = material;
-	vec3 texCoord = vec3(uv.x, 1 - uv.y, materialIndex) + norm - norm;/*DELETE NORM AFTERWARDS*/
-	if (material == uint(1))
+	vec3 texCoord = vec3(uv.x, 1 - uv.y, uv.z);
+	if (uv.z == 1.0)
 	{
 		vec3 opacCoord = vec3(uv.x, 1 - uv.y, 27.0);
 		if (texture(textures, opacCoord).y < 0.3)
 			discard;
-	} else if (material == uint(3))
+	} else if (uv.z == 3.0)
 	{
 		vec3 opacCoord = vec3(uv.x, 1 - uv.y, 28.0);
 		if (texture(textures, opacCoord).y < 0.3)
 			discard;
-	} else if (material == uint(22))
+	} else if (uv.z == 22.0)
 	{
 		vec3 opacCoord = vec3(uv.x, 1 - uv.y, 29.0);
 		if (texture(textures, opacCoord).y < 0.3)
