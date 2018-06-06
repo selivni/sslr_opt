@@ -22,25 +22,32 @@ void FPSHandler::clear()
 
 void FPSHandler::updateFPS()
 {
+	int currentTime = glutGet(GLUT_ELAPSED_TIME);
+	measurements_.push(currentTime - lastTime_);
+	sum_ += currentTime - lastTime_;
+	while (sum_ >= timeLength_)
+	{
+		sum_ -= measurements_.front();
+		measurements_.pop();
+	}
+	int result;
+	if (measurements_.empty() || sum_ == 0)
+		result = 1001;
+	else
+		result = sum_ / measurements_.size();
 	if (enabled_)
 	{
-		int currentTime = glutGet(GLUT_ELAPSED_TIME);
-		measurements_.push(currentTime - lastTime_);
-		sum_ += currentTime - lastTime_;
-		while (sum_ >= timeLength_)
-		{
-			sum_ -= measurements_.front();
-			measurements_.pop();
-		}
-		int result;
-		if (measurements_.empty() || sum_ == 0)
-			result = 1001;
-		else
-			result = sum_ / measurements_.size();
 		std::cout << '\n'
 			<< "FPS: " << 1000 / (result) << "      ";
-		lastTime_ = currentTime;
 	}
+	lastTime_ = currentTime;
+}
+
+int FPSHandler::getLast()
+{
+	if (measurements_.empty())
+		return 0;
+	return measurements_.back();
 }
 
 bool FPSHandler::flip()

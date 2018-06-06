@@ -1,6 +1,9 @@
 #include "TimeFunction.h"
 
-const GLfloat TimeFunction::defaultT = 1000.0f;
+const GLfloat TimeFunction::SECOND = 1000.0f;
+
+TimeFunction::~TimeFunction()
+	{}
 
 GLfloat sqr(GLfloat x)
 	{return x * x;}
@@ -14,7 +17,7 @@ GLfloat abs(GLfloat x)
 
 //================================CONSTANT======================================
 
-bool TimeFunctionConst::configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_)
+bool TimeFunctionConst::configure(GLfloat v0_, GLfloat v1_, GLfloat T_)
 {
 	if (T_ <= 0.0f)
 		return false;
@@ -32,8 +35,6 @@ GLfloat TimeFunctionConst::getDistance(GLfloat t0, GLfloat t)
 
 GLfloat TimeFunctionConst::getSpeedDelta(GLfloat t0, GLfloat t)
 {
-	if (!configured || t <= t0)
-		return 0.0f;
 	return 0.0f;
 }
 
@@ -44,7 +45,7 @@ TimeFunctionConst::TimeFunctionConst()
 
 //==================================LINEAR======================================
 
-bool TimeFunctionLinear::configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_)
+bool TimeFunctionLinear::configure(GLfloat v0_, GLfloat v1_, GLfloat T_)
 {
 	v0 = v0_;
 	a = (v1_ - v0_) / T_;
@@ -63,7 +64,7 @@ GLfloat TimeFunctionLinear::getSpeedDelta(GLfloat t0, GLfloat t)
 {
 	if (!configured || t <= t0)
 		return 0.0f;
-	return v0 + a * (t - t0);
+	return a * (t - t0);
 }
 
 TimeFunctionLinear::TimeFunctionLinear()
@@ -73,11 +74,11 @@ TimeFunctionLinear::TimeFunctionLinear()
 
 //================================PARABOLIC=====================================
 
-bool TimeFunctionParabolic::configureFunction(
+bool TimeFunctionParabolic::configure(
 	GLfloat v0_, GLfloat v1_, GLfloat T_)
 {
 	v0 = v0_;
-	a = (v1_ - v0_) / sqrt(T_);
+	a = (v1_ - v0_) / sqr(T_);
 	configured = true;
 	return true;
 }
@@ -93,7 +94,7 @@ GLfloat TimeFunctionParabolic::getSpeedDelta(GLfloat t0, GLfloat t)
 {
 	if (!configured || t <= t0)
 		return 0.0f;
-	return v0 + a * (sqr(t) - sqr(t0));
+	return a * (sqr(t) - sqr(t0));
 }
 
 TimeFunctionParabolic::TimeFunctionParabolic()
@@ -103,7 +104,7 @@ TimeFunctionParabolic::TimeFunctionParabolic()
 
 //================================SQRT==========================================
 
-bool TimeFunctionSqrt::configureFunction(
+bool TimeFunctionSqrt::configure(
 	GLfloat v0_, GLfloat v1_, GLfloat T_)
 {
 	if (T_ <= 0)
@@ -118,14 +119,14 @@ GLfloat TimeFunctionSqrt::getDistance(GLfloat t0, GLfloat t)
 {
 	if (!configured || t <= t0 || t < 0.0f || t0 < 0.0f)
 		return 0.0f;
-	return v0 * (t - t0) + 2.0f * (t * sqrt(t) - t0 * sqrt(t0)) / 3.0f;
+	return v0 * (t - t0) + 2.0f * a * (t * sqrt(t) - t0 * sqrt(t0)) / 3.0f;
 }
 
 GLfloat TimeFunctionSqrt::getSpeedDelta(GLfloat t0, GLfloat t)
 {
 	if (!configured || t <= t0 || t < 0.0f || t0 < 0.0f)
 		return 0.0f;
-	return v0 + a * (sqrt(t) - sqrt(t0));
+	return a * (sqrt(t) - sqrt(t0));
 }
 
 TimeFunctionSqrt::TimeFunctionSqrt()
@@ -135,9 +136,10 @@ TimeFunctionSqrt::TimeFunctionSqrt()
 
 //================================HYPERBOLIC====================================
 
-bool TimeFunctionHyperbolic::configureFunction(
+bool TimeFunctionHyperbolic::configure(
 	GLfloat v0_, GLfloat v1_, GLfloat T_)
 {
+	actualV0 = v0;
 	if (T_ <= 0 || v1_ == v0_)
 		return false;
 	if (v1_ > v0_)
@@ -172,7 +174,7 @@ GLfloat TimeFunctionHyperbolic::getSpeedDelta(GLfloat t0, GLfloat t)
 	if (abs(-direction * t + a) < 0.0000001f ||
 		abs(-direction * t0 + a) < 0.0000001f)
 		return 0.0f;
-	return v0 + 1.0f / (-direction * t + a) - 1.0f / (-direction * t0 + a);
+	return 1.0f / (-direction * t + a) - 1.0f / (-direction * t0 + a);
 }
 
 TimeFunctionHyperbolic::TimeFunctionHyperbolic()

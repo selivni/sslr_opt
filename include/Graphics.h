@@ -15,6 +15,7 @@
 #include "FPSHandler.h"
 #include "TexturesInfo.h"
 #include "ModelArrays.h"
+#include "CameraHandler.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -31,6 +32,7 @@ public:
 	void shutdown();
 	void special(int, int, int);
 	void keyboard(unsigned char, int, int);
+	void keyboardUp(unsigned char, int, int);
 	void mouseMove(int, int);
 	void reshape(GLint, GLint);
 	void display();
@@ -54,7 +56,7 @@ private:
 	bool mouseCaptured_;
 	void toggleMouse();
 
-	GL::Camera camera_;
+	CameraHandler camera_;
 
 	GLuint textures_;
 	GLuint texturesCount_;
@@ -119,6 +121,7 @@ namespace openGLFunctions
 	void display();
 	void idle();
 	void keyboard(unsigned char, int, int);
+	void keyboardUp(unsigned char, int, int);
 	void special(int, int, int);
 	void mouseMove(int, int);
 	void reshape(GLint, GLint);

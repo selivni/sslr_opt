@@ -2,20 +2,23 @@
 #include <GL/gl.h>
 #include <cmath>
 
+#include <iostream>
+
 class TimeFunction
 {
 public:
-	virtual bool configureFunction(GLfloat v0, GLfloat v1, GLfloat T) = 0;
+	virtual bool configure(GLfloat v0, GLfloat v1, GLfloat T) = 0;
 	virtual GLfloat getDistance(GLfloat t0, GLfloat t) = 0;
 	virtual GLfloat getSpeedDelta(GLfloat t0, GLfloat t) = 0;
+	virtual ~TimeFunction();
+	static const GLfloat SECOND;
 private:
-	static const GLfloat defaultT;
 };
 
 class TimeFunctionConst: public TimeFunction
 {
 public:
-	bool configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_);
+	bool configure(GLfloat v0_, GLfloat v1_, GLfloat T_);
 	GLfloat getDistance(GLfloat t0, GLfloat t);
 	GLfloat getSpeedDelta(GLfloat t0, GLfloat t);
 	TimeFunctionConst();
@@ -27,7 +30,7 @@ private:
 class TimeFunctionLinear: public TimeFunction
 {
 public:
-	bool configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_);
+	bool configure(GLfloat v0_, GLfloat v1_, GLfloat T_);
 	GLfloat getDistance(GLfloat t0, GLfloat t);
 	GLfloat getSpeedDelta(GLfloat t0, GLfloat t);
 	TimeFunctionLinear();
@@ -40,7 +43,7 @@ private:
 class TimeFunctionParabolic: public TimeFunction
 {
 public:
-	bool configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_);
+	bool configure(GLfloat v0_, GLfloat v1_, GLfloat T_);
 	GLfloat getDistance(GLfloat t0, GLfloat t);
 	GLfloat getSpeedDelta(GLfloat t0, GLfloat t);
 	TimeFunctionParabolic();
@@ -53,7 +56,7 @@ private:
 class TimeFunctionSqrt: public TimeFunction
 {
 public:
-	bool configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_);
+	bool configure(GLfloat v0_, GLfloat v1_, GLfloat T_);
 	GLfloat getDistance(GLfloat t0, GLfloat t);
 	GLfloat getSpeedDelta(GLfloat t0, GLfloat t);
 	TimeFunctionSqrt();
@@ -66,11 +69,12 @@ private:
 class TimeFunctionHyperbolic: public TimeFunction
 {
 public:
-	bool configureFunction(GLfloat v0_, GLfloat v1_, GLfloat T_);
+	bool configure(GLfloat v0_, GLfloat v1_, GLfloat T_);
 	GLfloat getDistance(GLfloat t0, GLfloat t);
 	GLfloat getSpeedDelta(GLfloat t0, GLfloat t);
 	TimeFunctionHyperbolic();
 private:
+	GLfloat actualV0;
 	GLfloat v0;
 	GLfloat a;
 	GLfloat direction;
