@@ -40,6 +40,8 @@ void Graphics::init(int windowWidth, int windowHeight)
 	glutDisplayFunc(openGLFunctions::display);
 	glutIdleFunc(openGLFunctions::idle);
 	glutKeyboardFunc(openGLFunctions::keyboard);
+	glutKeyboardUpFunc(openGLFunctions::keyboardUp);
+	glutIgnoreKeyRepeat(1);
 	glutSpecialFunc(openGLFunctions::special);
 	glutPassiveMotionFunc(openGLFunctions::mouseMove);
 	glutReshapeFunc(openGLFunctions::reshape);
@@ -421,6 +423,7 @@ void Graphics::timeCaptureEnd()
 void Graphics::drawSponza()
 {
 	fps_.updateFPS();
+	camera_.step(fps_.getLast());
 	GLuint shaderProgram;
 	if (lightsEnabled_)
 		shaderProgram = modelShaderLights_;
@@ -507,6 +510,7 @@ void Graphics::drawPrimaryTextures()
 	glViewport(0, 0, windowWidth_, windowHeight_);
 
 	fps_.updateFPS();
+	camera_.step(fps_.getLast());
 	GLint cameraLocation =
 		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
 //	GLint materialIndexLocation =
@@ -791,6 +795,11 @@ void openGLFunctions::keyboard(unsigned char key, int x, int y)
 	GraphicalPointer->keyboard(key, x, y);
 }
 
+void openGLFunctions::keyboardUp(unsigned char key, int x, int y)
+{
+	GraphicalPointer->keyboardUp(key, x, y);
+}
+
 void Graphics::shutdown()
 {
 	glutDestroyWindow(glutGetWindow());
@@ -819,20 +828,13 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 		shutdown();
 	else if (key == 'w' || key == 'W')
 	{
-		camera_.goForward(25.0);
-//		std::cout << "VM::vec3(" << camera_.position.x << ", "
-//				  << camera_.position.y << ", "
-//				  << camera_.position.z << ")," << std::endl;
-//		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
-//				  << camera_.position.y << ' '
-//				  << camera_.position.z << std::endl;
+		camera_.toggleSmoothMove(1000, 1024.0f, CH_SQRT);
+//		camera_.goForward(25.0);
 	}
 	else if (key == 's' || key == 'S')
 	{
-		camera_.goBack(25.0);
-//		std::cout << "\rCurrent camera position: " << camera_.position.x << ' '
-//				  << camera_.position.y << ' '
-//				  << camera_.position.z << std::endl;
+		camera_.toggleSmoothMove(1000, 1024.0f, CH_PARABOLIC);
+//		camera_.goBack(25.0);
 	}
 	else if (key == 'm' || key == 'M')
 		toggleMouse();
@@ -876,6 +878,18 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 	else if (key == 'c' || key == 'C')
 	{
 		setCameraLocation();
+	}
+}
+
+void Graphics::keyboardUp(unsigned char key, int x, int y)
+{
+	if (key == 'w' || key == 'W')
+	{
+		camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
+	}
+	else if (key == 's' || key == 'S')
+	{
+		camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
 	}
 }
 
