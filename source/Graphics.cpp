@@ -885,11 +885,11 @@ void Graphics::keyboardUp(unsigned char key, int x, int y)
 {
 	if (key == 'w' || key == 'W')
 	{
-		camera_.toggleSmoothStop(1024.0f / 2.0f, CH_HYPERBOLIC);
+		camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
 	}
 	else if (key == 's' || key == 'S')
 	{
-		camera_.toggleSmoothStop(1024.0f / 2.0f, CH_HYPERBOLIC);
+		camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
 	}
 }
 
