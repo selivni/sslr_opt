@@ -10,6 +10,7 @@
 #include "SOIL.h"
 
 #include "types.h"
+#include "drawMode.h"
 #include "SslrInfo.h"
 #include "LightsHandler.h"
 #include "FPSHandler.h"
@@ -56,6 +57,8 @@ private:
 	bool mouseCaptured_;
 	void toggleMouse();
 
+	bool wHeld_;
+	bool sHeld_;
 	CameraHandler camera_;
 
 	GLuint textures_;
@@ -71,7 +74,6 @@ private:
 	unsigned int sphereMeshSize_;
 
 	GLuint modelShader_;
-	GLuint modelShaderLights_;
 
 	VM::vec3 lightDirection_;
 	bool lightsEnabled_;

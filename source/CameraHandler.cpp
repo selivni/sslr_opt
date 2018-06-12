@@ -92,6 +92,10 @@ void CameraHandler::step(GLuint tickTime)
 		refreshFunction(TIME_VALUE_DEFAULT, desiredSpeed_, desiredSpeed_,
 			CH_CONST);
 	}
+/*
+	std::cout << "speed: " << speed_ << " distance: " << distance
+		<< std::endl;
+*/
 }
 
 void CameraHandler::refreshFunction(GLuint T, GLfloat v0, GLfloat v1, CH_Mode mode)

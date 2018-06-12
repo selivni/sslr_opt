@@ -27,4 +27,4 @@ So if the distance turns out to be further away than 1300 i stop giving fucks an
 
 What is left is to count how to determine minimal amount of iterations (probably won't need one on stage 2 because I will have big alpha already)
 
-Also don't forget to make smaller steps on promary bufferization or however should i call it
+Also don't forget to make smaller steps on primary bufferization or however should i call it

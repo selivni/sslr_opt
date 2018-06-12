@@ -27,6 +27,8 @@ void Graphics::init(int windowWidth, int windowHeight)
 
 	lastTime_ = 0;
 
+	wHeld_ = sHeld_ = false;
+
 	std::cout << "Initializing GLUT... " << std::flush;
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE |
@@ -117,8 +119,6 @@ void Graphics::createCamera()
 void Graphics::compileShaders()
 {
 	modelShader_ = GL::CompileShaderProgram("sponza");
-		CHECK_GL_ERRORS
-	modelShaderLights_ = GL::CompileShaderProgram("sponzaWithLights");
 		CHECK_GL_ERRORS
 }
 
@@ -424,23 +424,19 @@ void Graphics::drawSponza()
 {
 	fps_.updateFPS();
 	camera_.step(fps_.getLast());
-	GLuint shaderProgram;
-	if (lightsEnabled_)
-		shaderProgram = modelShaderLights_;
-	else
-		shaderProgram = modelShader_;
-
 	GLint cameraLocation =
-		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
+		glGetUniformLocation(modelShader_, "camera"); CHECK_GL_ERRORS
 //	GLint materialIndexLocation =
-//		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
+//		glGetUniformLocation(modelShader_, "material"); CHECK_GL_ERRORS
 	GLint cameraPosLoc =
-		glGetUniformLocation(shaderProgram, "cameraPosition");
+		glGetUniformLocation(modelShader_, "cameraPosition");
 			CHECK_GL_ERRORS
 	GLint textureLocation =
-		glGetUniformLocation(shaderProgram, "textureArray"); CHECK_GL_ERRORS
+		glGetUniformLocation(modelShader_, "textureArray"); CHECK_GL_ERRORS
+	GLint modeLocation =
+		glGetUniformLocation(modelShader_, "mode"); CHECK_GL_ERRORS
 
-	glUseProgram(shaderProgram); CHECK_GL_ERRORS
+	glUseProgram(modelShader_); CHECK_GL_ERRORS
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
 		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
 	GLfloat camPos[3];
@@ -454,11 +450,11 @@ void Graphics::drawSponza()
 	if (lightsEnabled_)
 	{
 		GLint moonDepthLocation =
-			glGetUniformLocation(shaderProgram, "moonLightDepth");
+			glGetUniformLocation(modelShader_, "moonLightDepth");
 		GLint moonCamLocation =
-			glGetUniformLocation(shaderProgram, "moonCam");
+			glGetUniformLocation(modelShader_, "moonCam");
 		GLint lightDirLocation =
-			glGetUniformLocation(shaderProgram, "moonDir");
+			glGetUniformLocation(modelShader_, "moonDir");
 
 		glUniformMatrix4fv(moonCamLocation, 1, GL_TRUE,
 			lights_.getMoonMatrix().data().data()); CHECK_GL_ERRORS
@@ -467,6 +463,8 @@ void Graphics::drawSponza()
 
 		glUniform1i(textureLocation, 0); CHECK_GL_ERRORS
 		glUniform1i(moonDepthLocation, 1); CHECK_GL_ERRORS
+
+		glUniform1ui(modeLocation, DrawMode::DEFAULT_LIGHTS);
 		
 		GLfloat values[3] =
 			{lightDirection_.x, lightDirection_.y, lightDirection_.z};
@@ -483,6 +481,7 @@ void Graphics::drawSponza()
 	} else
 	{
 		glUniform1i(textureLocation, textures_);
+		glUniform1ui(modeLocation, DrawMode::DEFAULT);
 	}
 	glBindVertexArray(mainVAO_);
 	glDrawElements(GL_TRIANGLES, indicesLocalSum_, GL_UNSIGNED_INT, 0); CHECK_GL_ERRORS
@@ -501,27 +500,23 @@ void Graphics::drawPrimaryTextures()
 	glDrawBuffers(3, buffers); CHECK_GL_ERRORS
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CHECK_GL_ERRORS
 
-	GLuint shaderProgram;
-	if (lightsEnabled_)
-		shaderProgram = sslr_.mrtLightProgram();
-	else
-		shaderProgram = sslr_.mrtProgram();
-
 	glViewport(0, 0, windowWidth_, windowHeight_);
 
 	fps_.updateFPS();
 	camera_.step(fps_.getLast());
 	GLint cameraLocation =
-		glGetUniformLocation(shaderProgram, "camera"); CHECK_GL_ERRORS
+		glGetUniformLocation(modelShader_, "camera"); CHECK_GL_ERRORS
 //	GLint materialIndexLocation =
-//		glGetUniformLocation(shaderProgram, "material"); CHECK_GL_ERRORS
+//		glGetUniformLocation(modelShader_, "material"); CHECK_GL_ERRORS
 	GLint cameraPosLoc =
-		glGetUniformLocation(shaderProgram, "cameraPosition");
+		glGetUniformLocation(modelShader_, "cameraPosition");
 			CHECK_GL_ERRORS
 	GLint textureLocation =
-		glGetUniformLocation(shaderProgram, "textureArray"); CHECK_GL_ERRORS
+		glGetUniformLocation(modelShader_, "textureArray"); CHECK_GL_ERRORS
+	GLint modeLocation =
+		glGetUniformLocation(modelShader_, "mode"); CHECK_GL_ERRORS
 
-	glUseProgram(shaderProgram); CHECK_GL_ERRORS
+	glUseProgram(modelShader_); CHECK_GL_ERRORS
 	glUniformMatrix4fv(cameraLocation, 1, GL_TRUE,
 		camera_.getMatrix().data().data()); CHECK_GL_ERRORS
 	GLfloat camPos[3];
@@ -533,11 +528,11 @@ void Graphics::drawPrimaryTextures()
 	if (lightsEnabled_)
 	{
 		GLint moonDepthLocation =
-			glGetUniformLocation(shaderProgram, "moonLightDepth");
+			glGetUniformLocation(modelShader_, "moonLightDepth");
 		GLint moonCamLocation =
-			glGetUniformLocation(shaderProgram, "moonCam");
+			glGetUniformLocation(modelShader_, "moonCam");
 		GLint lightDirLocation =
-			glGetUniformLocation(shaderProgram, "moonDir");
+			glGetUniformLocation(modelShader_, "moonDir");
 
 		glUniformMatrix4fv(moonCamLocation, 1, GL_TRUE,
 			lights_.getMoonMatrix().data().data()); CHECK_GL_ERRORS
@@ -547,6 +542,8 @@ void Graphics::drawPrimaryTextures()
 		glUniform1i(textureLocation, 0); CHECK_GL_ERRORS
 		glUniform1i(moonDepthLocation, 1); CHECK_GL_ERRORS
 		
+		glUniform1ui(modeLocation, DrawMode::MRT_LIGHTS);
+
 		GLfloat values[3] =
 			{lightDirection_.x, lightDirection_.y, lightDirection_.z};
 		glUniform3fv(lightDirLocation, 1, values);
@@ -562,6 +559,7 @@ void Graphics::drawPrimaryTextures()
 	} else
 	{
 		glUniform1i(textureLocation, textures_);
+		glUniform1ui(modeLocation, DrawMode::MRT);
 	}
 
 	glBindVertexArray(mainVAO_);
@@ -828,12 +826,14 @@ void Graphics::keyboard(unsigned char key, int x, int y)
 		shutdown();
 	else if (key == 'w' || key == 'W')
 	{
+		wHeld_ = true;
 		camera_.toggleSmoothMove(1000, 1024.0f, CH_SQRT);
 //		camera_.goForward(25.0);
 	}
 	else if (key == 's' || key == 'S')
 	{
-		camera_.toggleSmoothMove(1000, 1024.0f, CH_PARABOLIC);
+		sHeld_ = true;
+		camera_.toggleSmoothMove(1000, -1024.0f, CH_PARABOLIC);
 //		camera_.goBack(25.0);
 	}
 	else if (key == 'm' || key == 'M')
@@ -885,11 +885,15 @@ void Graphics::keyboardUp(unsigned char key, int x, int y)
 {
 	if (key == 'w' || key == 'W')
 	{
-		camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
+		if (!sHeld_)
+			camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
+		wHeld_ = false;
 	}
 	else if (key == 's' || key == 'S')
 	{
-		camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
+		if (!wHeld_)
+			camera_.toggleSmoothStop(512.0f / 2.0f, CH_PARABOLIC);
+		sHeld_ = false;
 	}
 }
 
