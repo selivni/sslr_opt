@@ -1,18 +1,12 @@
 #include "SslrInfo.h"
 
-SslrInfo::SslrInfo(): enabled_(false), mrtProgram_(0), drawBuffersProgram_(0),
+SslrInfo::SslrInfo(): enabled_(false), drawBuffersProgram_(0),
 	pictureNumberCounter_(0)
 	{}
 
 
 void SslrInfo::compileShaders()
 {
-
-	mrtProgram_ = GL::CompileShaderProgram("MRTSponza");
-		CHECK_GL_ERRORS
-
-	mrtLightProgram_ = GL::CompileShaderProgram("MRTSponzaWithLights");
-
 	drawBuffersProgram_ = GL::CompileShaderProgram("BufferSponza");
 		CHECK_GL_ERRORS
 	
@@ -158,12 +152,6 @@ GLuint SslrInfo::mrtBuffer()
 
 GLuint SslrInfo::lrBuffer()
 	{return lrFbo_;}
-
-GLuint SslrInfo::mrtProgram()
-	{return mrtProgram_;}
-
-GLuint SslrInfo::mrtLightProgram()
-	{return mrtLightProgram_;}
 
 GLuint SslrInfo::lrProgram()
 	{return lrProgram_;}
